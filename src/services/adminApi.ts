@@ -16,9 +16,10 @@ import {
   mockOverview,
   mockRevenueAnalytics,
   mockNotifications,
-} from './mockAdminData';
+export const API_BASE_URL =
+  (import.meta as any).env?.VITE_API_URL || 'https://data-daddy-backend.onrender.com/api';
 
-const BASE_URL = 'http://localhost:5000/api/admin';
+const BASE_URL = `${API_BASE_URL}/admin`;
 
 // Local in-memory state for fallback/offline mutation simulation
 let stateShops: ShopItem[] = [...mockShops];

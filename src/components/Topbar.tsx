@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Store, RefreshCw, Database } from 'lucide-react';
 import { useAdminAuth } from '../context/AdminAuthContext';
-import { adminApi } from '../services/adminApi';
+import { adminApi, API_BASE_URL } from '../services/adminApi';
 
 interface TopbarProps {
   title: string;
@@ -15,10 +15,10 @@ export const Topbar: React.FC<TopbarProps> = ({ title, subtitle, onRefresh, isRe
   const [backendOnline, setBackendOnline] = useState<boolean | null>(null);
   const [seeding, setSeeding] = useState(false);
 
-  // Check health of common backend API
+  // Check health of live backend API
   const checkHealth = async () => {
     try {
-      const res = await fetch('http://localhost:5000/api/health');
+      const res = await fetch(`${API_BASE_URL}/health`);
       setBackendOnline(res.ok);
     } catch {
       setBackendOnline(false);
@@ -71,7 +71,7 @@ export const Topbar: React.FC<TopbarProps> = ({ title, subtitle, onRefresh, isRe
       <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
         {/* Backend Connectivity Status */}
         <div
-          title={backendOnline ? 'Common Backend Connected (Port 5000)' : 'Backend offline - Using local state'}
+          title={backendOnline ? 'Render Backend Connected (Live Cloud)' : 'Backend offline - Using local fallback'}
           style={{
             display: 'flex',
             alignItems: 'center',
@@ -93,7 +93,7 @@ export const Topbar: React.FC<TopbarProps> = ({ title, subtitle, onRefresh, isRe
               backgroundColor: backendOnline ? '#10b981' : '#f59e0b',
             }}
           />
-          <span>{backendOnline ? 'Common Backend Live' : 'Offline / Standalone Mode'}</span>
+          <span>{backendOnline ? 'Render Backend Live' : 'Offline / Standalone Mode'}</span>
         </div>
 
         {/* Global Shop Selector Dropdown */}

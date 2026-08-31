@@ -8,7 +8,7 @@ import {
   AlertTriangle,
   Zap,
 } from 'lucide-react';
-import { adminApi } from '../services/adminApi';
+import { adminApi, API_BASE_URL } from '../services/adminApi';
 import { useAdminAuth } from '../context/AdminAuthContext';
 
 export const SystemHealthPage: React.FC = () => {
@@ -20,7 +20,7 @@ export const SystemHealthPage: React.FC = () => {
   const checkHealth = async () => {
     setLoading(true);
     try {
-      const res = await fetch('http://localhost:5000/api/health');
+      const res = await fetch(`${API_BASE_URL}/health`);
       if (res.ok) {
         const data = await res.json();
         setBackendHealth(data);
@@ -28,7 +28,7 @@ export const SystemHealthPage: React.FC = () => {
         setBackendHealth({ status: 'error', service: 'Unavailable' });
       }
     } catch {
-      setBackendHealth({ status: 'offline', service: 'Local Server Not Reachable' });
+      setBackendHealth({ status: 'offline', service: 'Live Server Not Reachable' });
     } finally {
       setLoading(false);
     }
@@ -83,7 +83,7 @@ export const SystemHealthPage: React.FC = () => {
               }}
             >
               {backendHealth?.status === 'ok' ? <CheckCircle2 size={13} /> : <AlertTriangle size={13} />}
-              {backendHealth?.status === 'ok' ? 'Online (Port 5000)' : 'Offline / Standalone'}
+              {backendHealth?.status === 'ok' ? 'Online (Render Cloud Live)' : 'Offline / Standalone'}
             </span>
           </div>
           <p style={{ fontSize: '0.8125rem', color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>
