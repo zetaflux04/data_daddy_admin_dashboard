@@ -18,8 +18,15 @@ import {
   mockNotifications,
 } from './mockAdminData';
 
-export const API_BASE_URL =
-  (import.meta as any).env?.VITE_API_URL || 'https://data-daddy-backend.onrender.com/api';
+const getAdminApiBaseUrl = (): string => {
+  let url = (import.meta as any).env?.VITE_API_URL || 'https://data-daddy-backend.onrender.com/api';
+  if (url.startsWith('https://localhost') || url.startsWith('https://127.0.0.1')) {
+    url = url.replace('https://', 'http://');
+  }
+  return url;
+};
+
+export const API_BASE_URL = getAdminApiBaseUrl();
 
 const BASE_URL = `${API_BASE_URL}/admin`;
 

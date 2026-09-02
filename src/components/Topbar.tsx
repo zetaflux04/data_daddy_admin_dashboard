@@ -15,7 +15,7 @@ export const Topbar: React.FC<TopbarProps> = ({ title, subtitle, onRefresh, isRe
   const [backendOnline, setBackendOnline] = useState<boolean | null>(null);
   const [seeding, setSeeding] = useState(false);
 
-  // Check health of live backend API
+  // Check health of live backend API once on mount
   const checkHealth = async () => {
     try {
       const res = await fetch(`${API_BASE_URL}/health`);
@@ -27,8 +27,6 @@ export const Topbar: React.FC<TopbarProps> = ({ title, subtitle, onRefresh, isRe
 
   useEffect(() => {
     checkHealth();
-    const interval = setInterval(checkHealth, 10000);
-    return () => clearInterval(interval);
   }, []);
 
   const handleSeed = async () => {
