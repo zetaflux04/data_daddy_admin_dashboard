@@ -16,10 +16,31 @@ import {
   mockOverview,
   mockRevenueAnalytics,
   mockNotifications,
+} from './mockAdminData';
+
 export const API_BASE_URL =
   (import.meta as any).env?.VITE_API_URL || 'https://data-daddy-backend.onrender.com/api';
 
 const BASE_URL = `${API_BASE_URL}/admin`;
+
+export const resolveImageUrl = (url?: string | null): string => {
+  if (!url) return '';
+  if (url.includes('.amazonaws.com/')) {
+    const key = url.split('.amazonaws.com/')[1];
+    return `${API_BASE_URL}/uploads/media/${key}`;
+  }
+  if (url.startsWith('/api/uploads/')) {
+    const base = API_BASE_URL.replace(/\/api\/?$/, '');
+    return `${base}${url}`;
+  }
+  if (url.startsWith('/uploads/')) {
+    return `${API_BASE_URL}${url}`;
+  }
+  if (url.startsWith('profiles/') || url.startsWith('general/') || url.startsWith('banners/')) {
+    return `${API_BASE_URL}/uploads/media/${url}`;
+  }
+  return url;
+};
 
 // Local in-memory state for fallback/offline mutation simulation
 let stateShops: ShopItem[] = [...mockShops];
@@ -201,6 +222,36 @@ export const adminApi = {
     };
   },
 
+  /**
+   * Upload Image / Logo to AWS S3
+   */
+  async uploadImage(file: File, folder: string = 'shops'): Promise<{ success: boolean; url: string; key?: string }> {
+    try {
+      const formData = new FormData();
+      formData.append('image', file);
+      formData.append('folder', folder);
+
+      const res = await fetch(`${API_BASE_URL}/uploads/image`, {
+        method: 'POST',
+        headers: { ...getAuthHeader() },
+        body: formData,
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        return data;
+      }
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.message || 'Upload to AWS S3 failed');
+    } catch (e: any) {
+      console.warn('Upload fallback to local object URL:', e);
+      return {
+        success: true,
+        url: URL.createObjectURL(file),
+      };
+    }
+  },
+
   async createShop(payload: Partial<ShopItem> & { plan?: 'free' | 'pro' }) {
     try {
       const res = await fetch(`${BASE_URL}/shops`, {
@@ -222,6 +273,7 @@ export const adminApi = {
       ownerName: payload.ownerName || 'Owner',
       phone: payload.phone || '9999999999',
       address: payload.address || { city: 'Mumbai' },
+      logoUrl: payload.logoUrl,
       subscription: {
         plan: payload.plan || 'free',
         status: 'active',

@@ -17,7 +17,7 @@ import { StatusBadge } from '../components/StatusBadge';
 import { ShopModal } from '../components/ShopModal';
 import { ShopDetailsModal } from '../components/ShopDetailsModal';
 import { TechnicianModal } from '../components/TechnicianModal';
-import { adminApi } from '../services/adminApi';
+import { adminApi, resolveImageUrl } from '../services/adminApi';
 import { useAdminAuth } from '../context/AdminAuthContext';
 
 export const ShopsPage: React.FC = () => {
@@ -202,16 +202,27 @@ export const ShopsPage: React.FC = () => {
                             width: '38px',
                             height: '38px',
                             borderRadius: 'var(--radius-md)',
-                            background: 'linear-gradient(135deg, #4f46e5, #0284c7)',
+                            background: shop.logoUrl ? '#F1F5F9' : 'linear-gradient(135deg, #4f46e5, #0284c7)',
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
                             color: '#fff',
                             fontWeight: 700,
                             fontSize: '0.9rem',
+                            overflow: 'hidden',
+                            flexShrink: 0,
+                            border: shop.logoUrl ? '1px solid var(--border-subtle)' : 'none',
                           }}
                         >
-                          {shop.name.charAt(0)}
+                          {shop.logoUrl ? (
+                            <img
+                              src={resolveImageUrl(shop.logoUrl)}
+                              alt={shop.name}
+                              style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                            />
+                          ) : (
+                            shop.name.charAt(0)
+                          )}
                         </div>
                         <div>
                           <div style={{ fontWeight: 700, color: 'var(--text-primary)' }}>{shop.name}</div>

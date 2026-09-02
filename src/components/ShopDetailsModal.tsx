@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { X, Store, User, Phone, MapPin, Wrench, IndianRupee, ClipboardList, Users } from 'lucide-react';
 import type { ShopItem, TechnicianItem } from '../types/admin';
 import { StatusBadge } from './StatusBadge';
-import { adminApi } from '../services/adminApi';
+import { adminApi, resolveImageUrl } from '../services/adminApi';
 
 interface ShopDetailsModalProps {
   shop: ShopItem | null;
@@ -47,17 +47,28 @@ export const ShopDetailsModal: React.FC<ShopDetailsModalProps> = ({
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
             <div
               style={{
-                width: '40px',
-                height: '40px',
+                width: '46px',
+                height: '46px',
                 borderRadius: 'var(--radius-md)',
                 backgroundColor: '#e0e7ff',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 color: '#4338ca',
+                overflow: 'hidden',
+                flexShrink: 0,
+                border: '1px solid var(--border-subtle)',
               }}
             >
-              <Store size={22} />
+              {shop.logoUrl ? (
+                <img
+                  src={resolveImageUrl(shop.logoUrl)}
+                  alt={shop.name}
+                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                />
+              ) : (
+                <Store size={22} />
+              )}
             </div>
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>

@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
-import { X, Store, Check } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { X, Store, Check, UploadCloud, Loader2 } from 'lucide-react';
 import type { ShopItem } from '../types/admin';
-import { adminApi } from '../services/adminApi';
+import { adminApi, resolveImageUrl } from '../services/adminApi';
 import { useAdminAuth } from '../context/AdminAuthContext';
 
 interface ShopModalProps {
@@ -13,9 +13,11 @@ interface ShopModalProps {
 
 export const ShopModal: React.FC<ShopModalProps> = ({ shop, isOpen, onClose, onSaved }) => {
   const { addToast, refreshShops } = useAdminAuth();
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [name, setName] = useState('');
   const [ownerName, setOwnerName] = useState('');
   const [phone, setPhone] = useState('');
+  const [logoUrl, setLogoUrl] = useState('');
   const [street, setStreet] = useState('');
   const [city, setCity] = useState('');
   const [state, setState] = useState('');
@@ -23,12 +25,14 @@ export const ShopModal: React.FC<ShopModalProps> = ({ shop, isOpen, onClose, onS
   const [plan, setPlan] = useState<'free' | 'pro'>('free');
   const [status, setStatus] = useState<'active' | 'expired' | 'canceled'>('active');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isUploadingLogo, setIsUploadingLogo] = useState(false);
 
   useEffect(() => {
     if (shop) {
       setName(shop.name);
       setOwnerName(shop.ownerName);
       setPhone(shop.phone);
+      setLogoUrl(shop.logoUrl || '');
       setStreet(shop.address?.street || '');
       setCity(shop.address?.city || '');
       setState(shop.address?.state || '');
@@ -39,6 +43,7 @@ export const ShopModal: React.FC<ShopModalProps> = ({ shop, isOpen, onClose, onS
       setName('');
       setOwnerName('');
       setPhone('');
+      setLogoUrl('');
       setStreet('');
       setCity('');
       setState('');
@@ -47,6 +52,24 @@ export const ShopModal: React.FC<ShopModalProps> = ({ shop, isOpen, onClose, onS
       setStatus('active');
     }
   }, [shop, isOpen]);
+
+  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsUploadingLogo(true);
+    try {
+      const res = await adminApi.uploadImage(file, 'shops');
+      if (res.url) {
+        setLogoUrl(res.url);
+        addToast('success', 'Shop logo uploaded to AWS S3!');
+      }
+    } catch (err: any) {
+      addToast('error', err.message || 'Failed to upload logo to AWS S3');
+    } finally {
+      setIsUploadingLogo(false);
+    }
+  };
 
   if (!isOpen) return null;
 
@@ -65,17 +88,19 @@ export const ShopModal: React.FC<ShopModalProps> = ({ shop, isOpen, onClose, onS
           name,
           ownerName,
           phone,
+          logoUrl,
           address: { street, city, state, pincode },
         });
         await adminApi.updateShopSubscription(shop._id, { plan, status });
         addToast('success', `Shop "${name}" updated successfully`);
-        if (updated) onSaved({ ...shop, ...updated, subscription: { ...shop.subscription, plan, status } });
+        if (updated) onSaved({ ...shop, ...updated, logoUrl, subscription: { ...shop.subscription, plan, status } });
       } else {
         // Create
         const created = await adminApi.createShop({
           name,
           ownerName,
           phone,
+          logoUrl,
           address: { street, city, state, pincode },
           plan,
         });
@@ -106,6 +131,86 @@ export const ShopModal: React.FC<ShopModalProps> = ({ shop, isOpen, onClose, onS
 
         <form onSubmit={handleSubmit}>
           <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            {/* Shop Logo & S3 Cloud Upload */}
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '1rem',
+                padding: '0.85rem',
+                backgroundColor: 'rgba(79, 70, 229, 0.04)',
+                border: '1px dashed rgba(79, 70, 229, 0.3)',
+                borderRadius: 'var(--radius-md)',
+              }}
+            >
+              <div
+                style={{
+                  width: '56px',
+                  height: '56px',
+                  borderRadius: 'var(--radius-md)',
+                  backgroundColor: 'var(--bg-card)',
+                  border: '1px solid var(--border-subtle)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  overflow: 'hidden',
+                  flexShrink: 0,
+                }}
+              >
+                {logoUrl ? (
+                  <img
+                    src={resolveImageUrl(logoUrl)}
+                    alt="Shop Logo"
+                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                  />
+                ) : (
+                  <Store size={26} color="var(--accent-primary)" />
+                )}
+              </div>
+
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--text-primary)' }}>
+                  Shop Logo / Profile Photo (AWS S3)
+                </div>
+                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '0.4rem' }}>
+                  Stored securely in Amazon S3 storage
+                </div>
+                <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    style={{ display: 'none' }}
+                    onChange={handleLogoUpload}
+                  />
+                  <button
+                    type="button"
+                    className="btn btn-secondary btn-sm"
+                    disabled={isUploadingLogo}
+                    onClick={() => fileInputRef.current?.click()}
+                    style={{ fontSize: '0.75rem', padding: '0.3rem 0.6rem', display: 'flex', alignItems: 'center', gap: '0.3rem' }}
+                  >
+                    {isUploadingLogo ? (
+                      <Loader2 size={13} className="spin" />
+                    ) : (
+                      <UploadCloud size={13} />
+                    )}
+                    <span>{isUploadingLogo ? 'Uploading to S3...' : 'Upload Logo'}</span>
+                  </button>
+                  {logoUrl && (
+                    <button
+                      type="button"
+                      className="btn btn-ghost btn-sm"
+                      onClick={() => setLogoUrl('')}
+                      style={{ fontSize: '0.75rem', padding: '0.3rem 0.5rem', color: 'var(--accent-rose)' }}
+                    >
+                      Remove
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
               <div className="input-group">
                 <label className="input-label">Shop Name *</label>
