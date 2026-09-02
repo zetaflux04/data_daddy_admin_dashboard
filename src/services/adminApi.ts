@@ -493,6 +493,7 @@ export const adminApi = {
     shopId?: string;
     status?: string;
     deviceType?: string;
+    orderType?: string;
     search?: string;
   }): Promise<{ orders: OrderItem[]; total: number }> {
     try {
@@ -500,6 +501,7 @@ export const adminApi = {
       if (params?.shopId && params.shopId !== 'all') q.set('shopId', params.shopId);
       if (params?.status && params.status !== 'all') q.set('status', params.status);
       if (params?.deviceType && params.deviceType !== 'all') q.set('deviceType', params.deviceType);
+      if (params?.orderType && params.orderType !== 'all') q.set('orderType', params.orderType);
       if (params?.search) q.set('search', params.search);
 
       const res = await fetch(`${BASE_URL}/orders?${q.toString()}`, {
@@ -526,6 +528,9 @@ export const adminApi = {
     if (params?.deviceType && params.deviceType !== 'all') {
       filtered = filtered.filter((o) => o.deviceType === params.deviceType);
     }
+    if (params?.orderType && params.orderType !== 'all') {
+      filtered = filtered.filter((o) => (o.orderType || 'repair') === params.orderType);
+    }
     if (params?.search) {
       const s = params.search.toLowerCase();
       filtered = filtered.filter(
@@ -533,9 +538,10 @@ export const adminApi = {
           o.jobId.toLowerCase().includes(s) ||
           o.customerSnapshot.name.toLowerCase().includes(s) ||
           o.customerSnapshot.phone.includes(s) ||
-          o.brand.toLowerCase().includes(s) ||
-          o.model.toLowerCase().includes(s) ||
-          o.problemDescription.toLowerCase().includes(s) // Search customer issues
+          (o.brand && o.brand.toLowerCase().includes(s)) ||
+          (o.model && o.model.toLowerCase().includes(s)) ||
+          (o.productName && o.productName.toLowerCase().includes(s)) ||
+          (o.problemDescription && o.problemDescription.toLowerCase().includes(s))
       );
     }
     return { orders: filtered, total: filtered.length };

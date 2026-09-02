@@ -8,6 +8,8 @@ import {
   MapPin,
   IndianRupee,
   Phone,
+  ShoppingBag,
+  Wrench,
 } from 'lucide-react';
 import type { OrderItem } from '../types/admin';
 import { StatusBadge } from '../components/StatusBadge';
@@ -22,6 +24,7 @@ export const OrdersPage: React.FC = () => {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [deviceFilter, setDeviceFilter] = useState('all');
+  const [orderTypeFilter, setOrderTypeFilter] = useState('all');
   const [loading, setLoading] = useState(true);
 
   // Modals
@@ -35,6 +38,7 @@ export const OrdersPage: React.FC = () => {
         shopId: selectedShopId,
         status: statusFilter,
         deviceType: deviceFilter,
+        orderType: orderTypeFilter,
         search,
       });
       setOrders(res.orders || []);
@@ -45,11 +49,12 @@ export const OrdersPage: React.FC = () => {
 
   useEffect(() => {
     fetchOrders();
-  }, [selectedShopId, statusFilter, deviceFilter, search]);
+  }, [selectedShopId, statusFilter, deviceFilter, orderTypeFilter, search]);
 
   const handleDeleteOrder = async (ord: OrderItem) => {
+    const typeLabel = (ord.orderType || 'repair') === 'accessory' ? 'accessory sale' : 'repair order';
     const confirmed = window.confirm(
-      `⚠️ Delete repair order "${ord.jobId}" for customer ${ord.customerSnapshot.name}?\n\nThis cannot be undone.`
+      `⚠️ Delete ${typeLabel} "${ord.jobId}" for customer ${ord.customerSnapshot.name}?\n\nThis cannot be undone.`
     );
     if (!confirmed) return;
 
@@ -71,13 +76,38 @@ export const OrdersPage: React.FC = () => {
     { id: 'delivered', label: 'Delivered' },
   ];
 
+  const getOrderTypeBadge = (orderType?: string) => {
+    const isAccessory = orderType === 'accessory';
+    return (
+      <span
+        style={{
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: '0.2rem',
+          fontSize: '0.625rem',
+          fontWeight: 700,
+          textTransform: 'uppercase',
+          letterSpacing: '0.04em',
+          padding: '0.15rem 0.45rem',
+          borderRadius: '4px',
+          backgroundColor: isAccessory ? 'rgba(168, 85, 247, 0.15)' : 'rgba(59, 130, 246, 0.15)',
+          color: isAccessory ? '#a855f7' : '#3b82f6',
+          border: `1px solid ${isAccessory ? 'rgba(168, 85, 247, 0.3)' : 'rgba(59, 130, 246, 0.3)'}`,
+        }}
+      >
+        {isAccessory ? <ShoppingBag size={9} /> : <Wrench size={9} />}
+        {isAccessory ? 'Accessory' : 'Repair'}
+      </span>
+    );
+  };
+
   return (
     <div className="page-wrapper" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
       {/* Header */}
       <div>
         <h2 style={{ fontSize: '1.5rem', fontWeight: 800 }}>Customer Orders & Repair Issues</h2>
         <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
-          Review all repair orders across centers. Inspect reported customer issues, device model numbers, costs, customer addresses, and update or delete orders.
+          Review all repair orders and accessory sales across centers. Inspect reported customer issues, device model numbers, costs, customer addresses, and update or delete orders.
         </p>
       </div>
 
@@ -91,10 +121,22 @@ export const OrdersPage: React.FC = () => {
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search by customer issue, device model, customer name, phone, or Job ID..."
+              placeholder="Search by customer issue, device model, product, customer name, phone, or Job ID..."
               className="input-field search-input"
             />
           </div>
+
+          {/* Order Type Filter */}
+          <select
+            value={orderTypeFilter}
+            onChange={(e) => setOrderTypeFilter(e.target.value)}
+            className="select-field"
+            style={{ width: '160px' }}
+          >
+            <option value="all">All Types</option>
+            <option value="repair">🔧 Repairs</option>
+            <option value="accessory">🛒 Accessories</option>
+          </select>
 
           {/* Device Type Filter */}
           <select
@@ -149,8 +191,9 @@ export const OrdersPage: React.FC = () => {
                 <th>Job ID & Center</th>
                 <th>Customer & Address</th>
                 <th>Phone</th>
-                <th>Device & Model</th>
-                <th style={{ minWidth: '220px' }}>Reported Customer Issue</th>
+                <th>Type</th>
+                <th>Device / Product</th>
+                <th style={{ minWidth: '220px' }}>Details</th>
                 <th>Status</th>
                 <th>Cost & Due</th>
                 <th style={{ textAlign: 'center' }}>Actions</th>
@@ -159,14 +202,14 @@ export const OrdersPage: React.FC = () => {
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan={8} style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>
+                  <td colSpan={9} style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>
                     Loading customer orders...
                   </td>
                 </tr>
               ) : orders.length === 0 ? (
                 <tr>
-                  <td colSpan={8} style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>
-                    No repair orders match your filters.
+                  <td colSpan={9} style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>
+                    No orders match your filters.
                   </td>
                 </tr>
               ) : (
@@ -177,6 +220,8 @@ export const OrdersPage: React.FC = () => {
                     typeof ord.customerId === 'object' && ord.customerId && 'address' in (ord.customerId as any)
                       ? `${(ord.customerId as any).address?.street || ''} ${(ord.customerId as any).address?.city || ''}`.trim() || 'On-file with center'
                       : 'On-file with center';
+
+                  const isAccessory = (ord.orderType || 'repair') === 'accessory';
 
                   return (
                     <tr key={ord._id}>
@@ -227,43 +272,72 @@ export const OrdersPage: React.FC = () => {
                         </div>
                       </td>
 
-                      {/* 4. Device Model Number */}
+                      {/* 4. Order Type Badge */}
                       <td>
-                        <div style={{ fontWeight: 700 }}>
-                          {ord.brand} {ord.model}
-                        </div>
-                        <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', textTransform: 'capitalize' }}>
-                          {ord.deviceType} {ord.serialOrImei ? `• IMEI: ${ord.serialOrImei.slice(-4)}` : ''}
-                        </div>
+                        {getOrderTypeBadge(ord.orderType)}
                       </td>
 
-                      {/* 5. Reported Customer Issue */}
+                      {/* 5. Device / Product Info */}
                       <td>
-                        <div className="issue-callout" title={ord.problemDescription}>
-                          <div
-                            style={{
-                              display: 'flex',
-                              alignItems: 'center',
-                              gap: '0.25rem',
-                              marginBottom: '0.2rem',
-                              color: 'var(--accent-amber)',
-                              fontWeight: 700,
-                              fontSize: '0.6875rem',
-                            }}
-                          >
-                            <AlertTriangle size={11} />
-                            <span>CUSTOMER ISSUE:</span>
+                        {isAccessory ? (
+                          <>
+                            <div style={{ fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                              <ShoppingBag size={13} color="var(--accent-primary)" />
+                              {ord.productName || 'Accessory'}
+                            </div>
+                            <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
+                              Price: ₹{(ord.productPrice || 0).toLocaleString('en-IN')}
+                            </div>
+                          </>
+                        ) : (
+                          <>
+                            <div style={{ fontWeight: 700 }}>
+                              {ord.brand} {ord.model}
+                            </div>
+                            <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', textTransform: 'capitalize' }}>
+                              {ord.deviceType} {ord.serialOrImei ? `• IMEI: ${ord.serialOrImei.slice(-4)}` : ''}
+                            </div>
+                          </>
+                        )}
+                      </td>
+
+                      {/* 6. Details — Issue for repair, sale info for accessory */}
+                      <td>
+                        {isAccessory ? (
+                          <div style={{
+                            fontSize: '0.8125rem',
+                            color: 'var(--text-secondary)',
+                            fontStyle: 'italic',
+                          }}>
+                            Accessory sale — no repair needed
                           </div>
-                          "{ord.problemDescription}"
-                        </div>
+                        ) : (
+                          <div className="issue-callout" title={ord.problemDescription}>
+                            <div
+                              style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '0.25rem',
+                                marginBottom: '0.2rem',
+                                color: 'var(--accent-amber)',
+                                fontWeight: 700,
+                                fontSize: '0.6875rem',
+                              }}
+                            >
+                              <AlertTriangle size={11} />
+                              <span>CUSTOMER ISSUE:</span>
+                            </div>
+                            "{ord.problemDescription}"
+                          </div>
+                        )}
                       </td>
 
-                      {/* 6. Status */}
+                      {/* 7. Status */}
                       <td>
                         <StatusBadge status={ord.status} />
                       </td>
 
-                      {/* 7. Cost & Due */}
+                      {/* 8. Cost & Due */}
                       <td>
                         <div style={{ fontWeight: 700, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
                           <IndianRupee size={12} />
@@ -280,7 +354,7 @@ export const OrdersPage: React.FC = () => {
                         )}
                       </td>
 
-                      {/* 8. Action Buttons: View Order, Edit Order, Delete Order */}
+                      {/* 9. Action Buttons: View Order, Edit Order, Delete Order */}
                       <td>
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.35rem' }}>
                           {/* 1. View Order */}

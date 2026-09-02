@@ -5,6 +5,7 @@ import { Topbar } from './components/Topbar';
 import { DashboardPage } from './pages/DashboardPage';
 import { ShopsPage } from './pages/ShopsPage';
 import { OrdersPage } from './pages/OrdersPage';
+import { AccessoriesPage } from './pages/AccessoriesPage';
 import { RevenuePage } from './pages/RevenuePage';
 import { NotificationPage } from './pages/NotificationPage';
 import { LoginPage } from './pages/LoginPage';
@@ -46,8 +47,13 @@ const AdminPortalContent: React.FC = () => {
         };
       case 'orders':
         return {
-          title: 'Customer Orders',
+          title: 'Customer Repair Orders',
           subtitle: 'Comprehensive orders directory with reported customer issues, device model numbers, costs, and actions',
+        };
+      case 'accessories':
+        return {
+          title: 'Accessory Sales & Products',
+          subtitle: 'Track direct accessory sales, products sold, revenue collections, and customer records across centers',
         };
       case 'revenue':
         return {
@@ -81,7 +87,7 @@ const AdminPortalContent: React.FC = () => {
           isRefreshing={isRefreshing}
         />
 
-        {/* 5 Core Tab Pages */}
+        {/* 6 Core Tab Pages */}
         <main style={{ flex: 1, paddingBottom: '3rem' }}>
           {activeTab === 'dashboard' && (
             <DashboardPage
@@ -94,6 +100,8 @@ const AdminPortalContent: React.FC = () => {
           {activeTab === 'shops' && <ShopsPage />}
 
           {activeTab === 'orders' && <OrdersPage />}
+
+          {activeTab === 'accessories' && <AccessoriesPage />}
 
           {activeTab === 'revenue' && <RevenuePage />}
 

@@ -103,12 +103,17 @@ export interface OrderItem {
     name: string;
     phone: string;
   };
+  orderType?: 'repair' | 'accessory';
   deviceType: DeviceType;
   brand: string;
   model: string;
   serialOrImei?: string;
   passcodePattern?: string;
   problemDescription: string; // Customer issue
+  photos?: string[];
+  // Accessory-specific fields
+  productName?: string;
+  productPrice?: number;
   status: JobStatus;
   assignedTechnicianId?: {
     _id: string;

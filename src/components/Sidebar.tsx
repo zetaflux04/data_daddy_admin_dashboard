@@ -8,6 +8,7 @@ import {
   LogOut,
   ShieldCheck,
   ChevronRight,
+  ShoppingBag,
 } from 'lucide-react';
 import { useAdminAuth } from '../context/AdminAuthContext';
 
@@ -15,6 +16,7 @@ export type NavTab =
   | 'dashboard'
   | 'shops'
   | 'orders'
+  | 'accessories'
   | 'revenue'
   | 'notifications';
 
@@ -29,7 +31,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab }) => 
   const navItems = [
     { id: 'dashboard' as NavTab, label: 'Overview/Dashboard', icon: LayoutDashboard, badge: null },
     { id: 'shops' as NavTab, label: 'Shops/Center', icon: Store, badge: null },
-    { id: 'orders' as NavTab, label: 'Orders', icon: ClipboardList, badge: 'Live' },
+    { id: 'orders' as NavTab, label: 'Repair Orders', icon: ClipboardList, badge: 'Live' },
+    { id: 'accessories' as NavTab, label: 'Accessories', icon: ShoppingBag, badge: 'Sales' },
     { id: 'revenue' as NavTab, label: 'Revenue', icon: IndianRupee, badge: null },
     { id: 'notifications' as NavTab, label: 'Notification', icon: Bell, badge: 'New' },
   ];
