@@ -1,19 +1,39 @@
 import React, { useState, useEffect } from 'react';
 import {
-  Search,
-  Plus,
-  Edit2,
-  MapPin,
-  Sparkles,
-  Users2,
-  Users,
-  ClipboardList,
-  Eye,
-  Trash2,
-  UserPlus,
-} from 'lucide-react';
+  Box,
+  Typography,
+  Paper,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  TextField,
+  FormControl,
+  Select,
+  MenuItem,
+  InputAdornment,
+  Button,
+  IconButton,
+  Tooltip,
+  Avatar,
+  Chip,
+  CircularProgress,
+  TablePagination,
+} from '@mui/material';
+import SearchRoundedIcon from '@mui/icons-material/SearchRounded';
+import AddBusinessRoundedIcon from '@mui/icons-material/AddBusinessRounded';
+import LocationOnRoundedIcon from '@mui/icons-material/LocationOnRounded';
+import PhoneRoundedIcon from '@mui/icons-material/PhoneRounded';
+import PeopleAltRoundedIcon from '@mui/icons-material/PeopleAltRounded';
+import VisibilityRoundedIcon from '@mui/icons-material/VisibilityRounded';
+import EditRoundedIcon from '@mui/icons-material/EditRounded';
+import DeleteOutlineRoundedIcon from '@mui/icons-material/DeleteOutlineRounded';
+import PersonAddRoundedIcon from '@mui/icons-material/PersonAddRounded';
+import AutoAwesomeRoundedIcon from '@mui/icons-material/AutoAwesomeRounded';
+
 import type { ShopItem } from '../types/admin';
-import { StatusBadge } from '../components/StatusBadge';
 import { ShopModal } from '../components/ShopModal';
 import { ShopDetailsModal } from '../components/ShopDetailsModal';
 import { TechnicianModal } from '../components/TechnicianModal';
@@ -26,6 +46,8 @@ export const ShopsPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [planFilter, setPlanFilter] = useState('all');
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
 
   // Modals state
   const [selectedShop, setSelectedShop] = useState<ShopItem | null>(null);
@@ -51,11 +73,13 @@ export const ShopsPage: React.FC = () => {
   };
 
   useEffect(() => {
+    setPage(0);
     fetchShops();
   }, [planFilter]);
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    setPage(0);
     fetchShops();
   };
 
@@ -91,283 +115,324 @@ export const ShopsPage: React.FC = () => {
   };
 
   return (
-    <div className="page-wrapper" style={{ display: 'flex', flexDirection: 'column', gap: '1.75rem' }}>
+    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
       {/* Top Header */}
-      <div
-        style={{
+      <Box
+        sx={{
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
           flexWrap: 'wrap',
-          gap: '1rem',
+          gap: 2,
         }}
       >
-        <div>
-          <h2 style={{ fontSize: '1.5rem', fontWeight: 800 }}>Shops & Repair Centers</h2>
-          <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
-            Manage all registered repair centers across cities, inspect performance, assign technicians, and control subscriptions.
-          </p>
-        </div>
+        <Box>
+          <Typography variant="h5" sx={{ fontWeight: 800, color: '#0F172A', letterSpacing: '-0.02em' }}>
+            Registered Repair Centers & Franchises
+          </Typography>
+          <Typography variant="body2" sx={{ color: 'text.secondary', mt: 0.5 }}>
+            Manage centers across cities, inspect performance, assign technicians, and control subscriptions.
+          </Typography>
+        </Box>
 
-        <button
+        <Button
+          variant="contained"
+          color="primary"
           onClick={() => {
             setSelectedShop(null);
             setIsEditModalOpen(true);
           }}
-          className="btn btn-primary"
+          startIcon={<AddBusinessRoundedIcon fontSize="small" />}
         >
-          <Plus size={16} />
-          <span>Register New Center</span>
-        </button>
-      </div>
+          Register New Center
+        </Button>
+      </Box>
 
       {/* Filter and Search Bar */}
-      <div className="glass-panel" style={{ padding: '1rem 1.25rem' }}>
-        <form
+      <Paper sx={{ p: 2, borderRadius: 3 }}>
+        <Box
+          component="form"
           onSubmit={handleSearchSubmit}
-          style={{
+          sx={{
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
-            gap: '1rem',
+            gap: 2,
             flexWrap: 'wrap',
           }}
         >
-          <div className="search-wrapper" style={{ flex: 1, minWidth: '280px' }}>
-            <Search size={16} />
-            <input
-              type="text"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search by center name, owner, city, phone..."
-              className="input-field search-input"
-            />
-          </div>
+          <TextField
+            placeholder="Search by center name, owner, city, phone..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            sx={{ flex: 1, minWidth: { xs: '100%', sm: 280 } }}
+            slotProps={{
+              input: {
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <SearchRoundedIcon sx={{ color: 'text.secondary', fontSize: 20 }} />
+                  </InputAdornment>
+                ),
+              },
+            }}
+          />
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-            <select
-              value={planFilter}
-              onChange={(e) => setPlanFilter(e.target.value)}
-              className="select-field"
-              style={{ width: '150px' }}
-            >
-              <option value="all">All Plans</option>
-              <option value="pro">⭐ Pro Plan</option>
-              <option value="free">🌱 Free Tier</option>
-            </select>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+            <FormControl size="small" sx={{ minWidth: 140 }}>
+              <Select
+                value={planFilter}
+                onChange={(e) => setPlanFilter(e.target.value)}
+              >
+                <MenuItem value="all">All Plans</MenuItem>
+                <MenuItem value="pro">⭐ Pro Plan</MenuItem>
+                <MenuItem value="free">🌱 Free Tier</MenuItem>
+              </Select>
+            </FormControl>
 
-            <button type="submit" className="btn btn-secondary">
+            <Button type="submit" variant="outlined" sx={{ color: '#334155', borderColor: '#CBD5E1' }}>
               Search
-            </button>
-          </div>
-        </form>
-      </div>
+            </Button>
+          </Box>
+        </Box>
+      </Paper>
 
       {/* Centers Table */}
-      <div className="glass-panel" style={{ overflow: 'hidden' }}>
-        <div className="table-container">
-          <table className="data-table">
-            <thead>
-              <tr>
-                <th>Center / Shop</th>
-                <th>Owner & Contact</th>
-                <th>Staff</th>
-                <th>Clients</th>
-                <th>Orders</th>
-                <th>Revenue</th>
-                <th>Tier</th>
-                <th style={{ textAlign: 'center' }}>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
+      <Paper sx={{ borderRadius: 3, overflow: 'hidden' }}>
+        <TableContainer>
+          <Table size="medium">
+            <TableHead>
+              <TableRow>
+                <TableCell>Center / Shop</TableCell>
+                <TableCell>Owner & Contact</TableCell>
+                <TableCell>Staff</TableCell>
+                <TableCell>Clients</TableCell>
+                <TableCell>Orders</TableCell>
+                <TableCell>Revenue</TableCell>
+                <TableCell>Subscription Tier</TableCell>
+                <TableCell align="center">Actions</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
               {loading ? (
-                <tr>
-                  <td colSpan={8} style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>
-                    Loading repair centers...
-                  </td>
-                </tr>
+                <TableRow>
+                  <TableCell colSpan={8} align="center" sx={{ py: 6 }}>
+                    <CircularProgress size={32} />
+                    <Typography variant="body2" sx={{ color: 'text.secondary', mt: 1.5 }}>
+                      Loading repair centers...
+                    </Typography>
+                  </TableCell>
+                </TableRow>
               ) : shops.length === 0 ? (
-                <tr>
-                  <td colSpan={8} style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>
-                    No shops match your criteria.
-                  </td>
-                </tr>
+                <TableRow>
+                  <TableCell colSpan={8} align="center" sx={{ py: 6, color: 'text.secondary' }}>
+                    No repair centers found matching your query.
+                  </TableCell>
+                </TableRow>
               ) : (
-                shops.map((shop) => (
-                  <tr key={shop._id}>
-                    <td>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                        <div
-                          style={{
-                            width: '38px',
-                            height: '38px',
-                            borderRadius: 'var(--radius-md)',
-                            background: shop.logoUrl ? '#F1F5F9' : 'linear-gradient(135deg, #4f46e5, #0284c7)',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            color: '#fff',
-                            fontWeight: 700,
+                shops
+                  .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+                  .map((shop) => (
+                  <TableRow key={shop._id} hover>
+                    {/* Shop details */}
+                    <TableCell>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                        <Avatar
+                          src={shop.logoUrl ? resolveImageUrl(shop.logoUrl) : undefined}
+                          sx={{
+                            width: 42,
+                            height: 42,
+                            borderRadius: 2.5,
+                            bgcolor: 'primary.main',
+                            color: '#FFFFFF',
+                            fontWeight: 800,
                             fontSize: '0.9rem',
-                            overflow: 'hidden',
-                            flexShrink: 0,
-                            border: shop.logoUrl ? '1px solid var(--border-subtle)' : 'none',
+                            border: '1px solid #E2E8F0',
                           }}
                         >
-                          {shop.logoUrl ? (
-                            <img
-                              src={resolveImageUrl(shop.logoUrl)}
-                              alt={shop.name}
-                              style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                            />
-                          ) : (
-                            shop.name.charAt(0)
-                          )}
-                        </div>
-                        <div>
-                          <div style={{ fontWeight: 700, color: 'var(--text-primary)' }}>{shop.name}</div>
-                          <div
-                            style={{
-                              fontSize: '0.75rem',
-                              color: 'var(--text-muted)',
-                              display: 'flex',
-                              alignItems: 'center',
-                              gap: '0.25rem',
+                          {shop.name.charAt(0)}
+                        </Avatar>
+                        <Box>
+                          <Typography variant="body2" sx={{ fontWeight: 800, color: '#0F172A' }}>
+                            {shop.name}
+                          </Typography>
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.35, mt: 0.25 }}>
+                            <LocationOnRoundedIcon sx={{ fontSize: 13, color: 'text.secondary' }} />
+                            <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                              {shop.address?.city || 'India'}
+                              {shop.address?.state ? ` • ${shop.address.state}` : ''}
+                            </Typography>
+                          </Box>
+                        </Box>
+                      </Box>
+                    </TableCell>
+
+                    {/* Owner & Phone */}
+                    <TableCell>
+                      <Typography variant="body2" sx={{ fontWeight: 700, color: '#1E293B' }}>
+                        {shop.ownerName}
+                      </Typography>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.35, mt: 0.25 }}>
+                        <PhoneRoundedIcon sx={{ fontSize: 13, color: 'secondary.main' }} />
+                        <Typography variant="caption" sx={{ fontWeight: 600, color: 'secondary.dark' }}>
+                          {shop.phone}
+                        </Typography>
+                      </Box>
+                    </TableCell>
+
+                    {/* Staff */}
+                    <TableCell>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                        <PeopleAltRoundedIcon sx={{ fontSize: 15, color: 'text.secondary' }} />
+                        <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                          {shop.stats?.totalStaff || 1} staff
+                        </Typography>
+                      </Box>
+                    </TableCell>
+
+                    {/* Clients */}
+                    <TableCell>
+                      <Typography variant="body2" sx={{ fontWeight: 600, color: '#334155' }}>
+                        {(shop.stats?.totalCustomers || 0).toLocaleString()}
+                      </Typography>
+                    </TableCell>
+
+                    {/* Orders */}
+                    <TableCell>
+                      <Typography variant="body2" sx={{ fontWeight: 700, color: 'primary.main' }}>
+                        {(shop.stats?.totalOrders || 0).toLocaleString()}
+                      </Typography>
+                    </TableCell>
+
+                    {/* Revenue */}
+                    <TableCell>
+                      <Typography variant="body2" sx={{ fontWeight: 800, color: 'success.main' }}>
+                        ₹{(shop.stats?.totalRevenue || 0).toLocaleString()}
+                      </Typography>
+                    </TableCell>
+
+                    {/* Subscription Tier with Toggle */}
+                    <TableCell>
+                      <Tooltip title="Click to toggle Pro / Free plan">
+                        <Chip
+                          icon={
+                            shop.subscription?.plan === 'pro' ? (
+                              <AutoAwesomeRoundedIcon sx={{ fontSize: '13px !important' }} />
+                            ) : undefined
+                          }
+                          label={shop.subscription?.plan === 'pro' ? 'PRO PLAN' : 'FREE TIER'}
+                          size="small"
+                          clickable
+                          onClick={() => handleTogglePlan(shop)}
+                          sx={{
+                            fontWeight: 800,
+                            fontSize: '0.68rem',
+                            borderRadius: 1.5,
+                            bgcolor:
+                              shop.subscription?.plan === 'pro'
+                                ? 'rgba(124, 58, 237, 0.1)'
+                                : 'rgba(100, 116, 139, 0.1)',
+                            color: shop.subscription?.plan === 'pro' ? '#7C3AED' : '#475569',
+                            border: `1px solid ${
+                              shop.subscription?.plan === 'pro'
+                                ? 'rgba(124, 58, 237, 0.3)'
+                                : 'rgba(100, 116, 139, 0.25)'
+                            }`,
+                          }}
+                        />
+                      </Tooltip>
+                    </TableCell>
+
+                    {/* Actions */}
+                    <TableCell align="center">
+                      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.5 }}>
+                        <Tooltip title="Assign New Technician">
+                          <IconButton
+                            size="small"
+                            onClick={() => handleOpenAddTech(shop._id)}
+                            sx={{
+                              color: 'secondary.main',
+                              bgcolor: 'rgba(6, 182, 212, 0.08)',
+                              '&:hover': { bgcolor: 'rgba(6, 182, 212, 0.16)' },
                             }}
                           >
-                            <MapPin size={11} />
-                            <span>
-                              {shop.address?.city || 'India'}{' '}
-                              {shop.address?.state ? `• ${shop.address.state}` : ''}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                    </td>
+                            <PersonAddRoundedIcon fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
 
-                    <td>
-                      <div style={{ fontWeight: 600 }}>{shop.ownerName}</div>
-                      <div style={{ fontSize: '0.75rem', color: 'var(--accent-cyan)', fontWeight: 600 }}>
-                        📞 {shop.phone}
-                      </div>
-                    </td>
+                        <Tooltip title="View Center Details & Technicians">
+                          <IconButton
+                            size="small"
+                            onClick={() => {
+                              setDetailsShop(shop);
+                              setIsDetailsModalOpen(true);
+                            }}
+                            sx={{
+                              color: 'primary.main',
+                              bgcolor: 'rgba(0, 82, 255, 0.08)',
+                              '&:hover': { bgcolor: 'rgba(0, 82, 255, 0.16)' },
+                            }}
+                          >
+                            <VisibilityRoundedIcon fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
 
-                    <td>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', fontWeight: 600 }}>
-                        <Users2 size={14} color="var(--text-muted)" />
-                        <span>{shop.stats?.totalStaff || 1} staff</span>
-                      </div>
-                    </td>
+                        <Tooltip title="Edit Center Info">
+                          <IconButton
+                            size="small"
+                            onClick={() => {
+                              setSelectedShop(shop);
+                              setIsEditModalOpen(true);
+                            }}
+                            sx={{
+                              color: 'info.main',
+                              bgcolor: 'rgba(99, 102, 241, 0.08)',
+                              '&:hover': { bgcolor: 'rgba(99, 102, 241, 0.16)' },
+                            }}
+                          >
+                            <EditRoundedIcon fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
 
-                    <td>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', fontWeight: 600 }}>
-                        <Users size={14} color="var(--text-muted)" />
-                        <span>{shop.stats?.totalCustomers || 0} clients</span>
-                      </div>
-                    </td>
-
-                    <td>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', fontWeight: 700 }}>
-                        <ClipboardList size={14} color="var(--accent-primary)" />
-                        <span>{shop.stats?.totalOrders || 0} jobs</span>
-                      </div>
-                    </td>
-
-                    <td>
-                      <div style={{ fontWeight: 700, color: 'var(--accent-emerald)' }}>
-                        ₹{(shop.stats?.totalRevenue || 0).toLocaleString('en-IN')}
-                      </div>
-                      {(shop.stats?.totalDues || 0) > 0 && (
-                        <div style={{ fontSize: '0.7rem', color: '#e11d48', fontWeight: 600 }}>
-                          Due: ₹{(shop.stats?.totalDues || 0).toLocaleString('en-IN')}
-                        </div>
-                      )}
-                    </td>
-
-                    <td>
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem', alignItems: 'flex-start' }}>
-                        <StatusBadge status={shop.subscription.plan} type="plan" />
-                        <span
-                          style={{
-                            fontSize: '0.6875rem',
-                            color: 'var(--text-muted)',
-                            textTransform: 'capitalize',
-                          }}
-                        >
-                          {shop.subscription.status}
-                        </span>
-                      </div>
-                    </td>
-
-                    {/* Action Buttons: View Details, Edit Center, Delete Shop, Add Technician */}
-                    <td>
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem', flexWrap: 'nowrap' }}>
-                        {/* 1. View Details */}
-                        <button
-                          onClick={() => {
-                            setDetailsShop(shop);
-                            setIsDetailsModalOpen(true);
-                          }}
-                          className="btn btn-secondary btn-sm"
-                          title="View Center Details & Technicians"
-                        >
-                          <Eye size={13} />
-                          <span>Details</span>
-                        </button>
-
-                        {/* 2. Edit Center */}
-                        <button
-                          onClick={() => {
-                            setSelectedShop(shop);
-                            setIsEditModalOpen(true);
-                          }}
-                          className="btn btn-secondary btn-sm"
-                          title="Edit Center Profile"
-                        >
-                          <Edit2 size={13} />
-                          <span>Edit</span>
-                        </button>
-
-                        {/* 3. Add Technician */}
-                        <button
-                          onClick={() => handleOpenAddTech(shop._id)}
-                          className="btn btn-secondary btn-sm"
-                          title="Add Technician directly to this Shop"
-                          style={{ borderColor: 'var(--accent-primary)', color: 'var(--accent-primary)' }}
-                        >
-                          <UserPlus size={13} />
-                          <span>+ Tech</span>
-                        </button>
-
-                        {/* 4. Delete Shop */}
-                        <button
-                          onClick={() => handleDeleteShop(shop)}
-                          className="btn btn-danger btn-sm"
-                          title="Delete Shop"
-                        >
-                          <Trash2 size={13} />
-                        </button>
-
-                        {/* Plan Toggle shortcut */}
-                        <button
-                          onClick={() => handleTogglePlan(shop)}
-                          className="btn btn-ghost btn-sm"
-                          title="Toggle Pro / Free Tier"
-                          style={{ padding: '0.35rem', color: shop.subscription.plan === 'pro' ? '#d97706' : 'var(--accent-primary)' }}
-                        >
-                          <Sparkles size={13} />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
+                        <Tooltip title="Delete Center">
+                          <IconButton
+                            size="small"
+                            onClick={() => handleDeleteShop(shop)}
+                            sx={{
+                              color: 'error.main',
+                              bgcolor: 'rgba(239, 68, 68, 0.08)',
+                              '&:hover': { bgcolor: 'rgba(239, 68, 68, 0.16)' },
+                            }}
+                          >
+                            <DeleteOutlineRoundedIcon fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
+                      </Box>
+                    </TableCell>
+                  </TableRow>
                 ))
               )}
-            </tbody>
-          </table>
-        </div>
-      </div>
+            </TableBody>
+          </Table>
+        </TableContainer>
 
-      {/* 1. Edit / Create Shop Modal */}
+        {shops.length > 0 && (
+          <TablePagination
+            rowsPerPageOptions={[5, 10, 25]}
+            component="div"
+            count={shops.length}
+            rowsPerPage={rowsPerPage}
+            page={page}
+            onPageChange={(_event, newPage) => setPage(newPage)}
+            onRowsPerPageChange={(event) => {
+              setRowsPerPage(parseInt(event.target.value, 10));
+              setPage(0);
+            }}
+            sx={{ borderTop: '1px solid #E2E8F0' }}
+          />
+        )}
+      </Paper>
+
+      {/* Edit or Create Shop Modal */}
       <ShopModal
         shop={selectedShop}
         isOpen={isEditModalOpen}
@@ -375,29 +440,31 @@ export const ShopsPage: React.FC = () => {
         onSaved={() => fetchShops()}
       />
 
-      {/* 2. View Shop Details Modal */}
+      {/* Shop Details Modal */}
       <ShopDetailsModal
         shop={detailsShop}
         isOpen={isDetailsModalOpen}
         onClose={() => setIsDetailsModalOpen(false)}
-        onEdit={(s) => {
-          setSelectedShop(s);
+        onEdit={(shopToEdit) => {
+          setIsDetailsModalOpen(false);
+          setSelectedShop(shopToEdit);
           setIsEditModalOpen(true);
         }}
-        onAddTechnician={(sId) => handleOpenAddTech(sId)}
-      />
-
-      {/* 3. Add Technician Modal */}
-      <TechnicianModal
-        technician={null}
-        defaultShopId={targetShopIdForTech}
-        isOpen={isTechModalOpen}
-        onClose={() => setIsTechModalOpen(false)}
-        onSaved={() => {
-          addToast('success', 'Technician assigned successfully');
-          fetchShops();
+        onAddTechnician={(shopId) => {
+          setIsDetailsModalOpen(false);
+          handleOpenAddTech(shopId);
         }}
       />
-    </div>
+
+      {/* Technician Modal */}
+      <TechnicianModal
+        technician={null}
+        shopId={targetShopIdForTech}
+        isOpen={isTechModalOpen}
+        onClose={() => setIsTechModalOpen(false)}
+        onSaved={() => fetchShops()}
+      />
+    </Box>
   );
 };
+export default ShopsPage;

@@ -1,11 +1,30 @@
 import React, { useState } from 'react';
-import { ShieldCheck, Lock, Mail, ArrowRight, Sparkles } from 'lucide-react';
+import {
+  Box,
+  Card,
+  CardContent,
+  Typography,
+  TextField,
+  Button,
+  InputAdornment,
+  IconButton,
+  CircularProgress,
+  Divider,
+} from '@mui/material';
+import EmailRoundedIcon from '@mui/icons-material/EmailRounded';
+import LockRoundedIcon from '@mui/icons-material/LockRounded';
+import ArrowForwardRoundedIcon from '@mui/icons-material/ArrowForwardRounded';
+import AutoAwesomeRoundedIcon from '@mui/icons-material/AutoAwesomeRounded';
+import VisibilityRoundedIcon from '@mui/icons-material/VisibilityRounded';
+import VisibilityOffRoundedIcon from '@mui/icons-material/VisibilityOffRounded';
 import { useAdminAuth } from '../context/AdminAuthContext';
+import { Logo } from '../components/Logo';
 
 export const LoginPage: React.FC = () => {
   const { login, addToast } = useAdminAuth();
   const [email, setEmail] = useState('admin@datadaddy.com');
   const [password, setPassword] = useState('admin123');
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -32,112 +51,197 @@ export const LoginPage: React.FC = () => {
   };
 
   return (
-    <div style={{
-      minHeight: '100vh',
-      width: '100vw',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      backgroundColor: 'var(--bg-primary)',
-      backgroundImage: `
-        radial-gradient(circle at 15% 20%, rgba(99, 102, 241, 0.18) 0px, transparent 40%),
-        radial-gradient(circle at 85% 75%, rgba(6, 182, 212, 0.14) 0px, transparent 45%)
-      `,
-      padding: '1.5rem',
-    }}>
-      <div
-        className="glass-panel"
-        style={{
-          maxWidth: '440px',
+    <Box
+      sx={{
+        minHeight: '100vh',
+        width: '100vw',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: '#0A0F1D',
+        backgroundImage: `
+          radial-gradient(circle at 15% 20%, rgba(0, 82, 255, 0.22) 0px, transparent 45%),
+          radial-gradient(circle at 85% 75%, rgba(6, 182, 212, 0.18) 0px, transparent 50%)
+        `,
+        p: 2,
+      }}
+    >
+      <Card
+        sx={{
+          maxWidth: 440,
           width: '100%',
-          padding: '2.5rem 2rem',
-          borderRadius: 'var(--radius-xl)',
-          border: '1px solid var(--border-medium)',
-          boxShadow: 'var(--shadow-lg), var(--shadow-glow)',
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
+          p: { xs: 2, sm: 3.5 },
+          borderRadius: 3.5,
+          backgroundColor: 'rgba(255, 255, 255, 0.98)',
+          backdropFilter: 'blur(20px)',
+          border: '1px solid rgba(226, 232, 240, 0.8)',
+          boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.35)',
         }}
       >
-        {/* Logo Badge */}
-        <div style={{
-          width: '56px',
-          height: '56px',
-          borderRadius: 'var(--radius-lg)',
-          background: 'var(--gradient-brand)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          boxShadow: 'var(--shadow-glow)',
-          marginBottom: '1.25rem',
-        }}>
-          <ShieldCheck size={32} color="#ffffff" />
-        </div>
+        <CardContent sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', p: 0 }}>
+          {/* Official DataDaddy Logo */}
+          <Box
+            sx={{
+              p: 1.5,
+              borderRadius: 3,
+              backgroundColor: '#F8FAFC',
+              border: '1px solid #E2E8F0',
+              boxShadow: '0 4px 16px rgba(0, 82, 255, 0.1)',
+              mb: 2.5,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <Logo variant="full" height={48} />
+          </Box>
 
-        {/* Title */}
-        <h2 style={{ fontSize: '1.75rem', fontWeight: 800, textAlign: 'center', marginBottom: '0.25rem' }}>
-          Data<span style={{ color: 'var(--accent-primary)' }}>Daddy</span> Admin
-        </h2>
-        <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', textAlign: 'center', marginBottom: '2rem' }}>
-          Cross-Tenant Super Admin & Control Portal
-        </p>
+          <Typography
+            variant="h5"
+            sx={{
+              fontWeight: 800,
+              textAlign: 'center',
+              color: '#0F172A',
+              letterSpacing: '-0.02em',
+              mb: 0.5,
+            }}
+          >
+            Admin Control Portal
+          </Typography>
 
-        {/* Form */}
-        <form onSubmit={handleSubmit} style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-          <div className="input-group" style={{ marginBottom: 0 }}>
-            <label className="input-label">Admin Email Address</label>
-            <div className="search-wrapper">
-              <Mail size={16} />
-              <input
+          <Typography
+            variant="body2"
+            sx={{
+              color: '#64748B',
+              textAlign: 'center',
+              mb: 3.5,
+            }}
+          >
+            Cross-tenant governance, financial analytics & repair tracking
+          </Typography>
+
+          {/* Form */}
+          <Box
+            component="form"
+            onSubmit={handleSubmit}
+            sx={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 2.5 }}
+          >
+            <Box>
+              <Typography
+                variant="caption"
+                sx={{ fontWeight: 700, color: '#334155', display: 'block', mb: 0.75 }}
+              >
+                Admin Email Address
+              </Typography>
+              <TextField
+                fullWidth
                 type="email"
-                className="input-field search-input"
                 placeholder="admin@datadaddy.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
+                slotProps={{
+                  input: {
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <EmailRoundedIcon sx={{ color: 'text.secondary', fontSize: 20 }} />
+                      </InputAdornment>
+                    ),
+                  },
+                }}
               />
-            </div>
-          </div>
+            </Box>
 
-          <div className="input-group" style={{ marginBottom: 0 }}>
-            <label className="input-label">Password</label>
-            <div className="search-wrapper">
-              <Lock size={16} />
-              <input
-                type="password"
-                className="input-field search-input"
+            <Box>
+              <Typography
+                variant="caption"
+                sx={{ fontWeight: 700, color: '#334155', display: 'block', mb: 0.75 }}
+              >
+                Password
+              </Typography>
+              <TextField
+                fullWidth
+                type={showPassword ? 'text' : 'password'}
                 placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
+                slotProps={{
+                  input: {
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <LockRoundedIcon sx={{ color: 'text.secondary', fontSize: 20 }} />
+                      </InputAdornment>
+                    ),
+                    endAdornment: (
+                      <InputAdornment position="end">
+                        <IconButton
+                          size="small"
+                          onClick={() => setShowPassword(!showPassword)}
+                          edge="end"
+                        >
+                          {showPassword ? (
+                            <VisibilityOffRoundedIcon fontSize="small" />
+                          ) : (
+                            <VisibilityRoundedIcon fontSize="small" />
+                          )}
+                        </IconButton>
+                      </InputAdornment>
+                    ),
+                  },
+                }}
               />
-            </div>
-          </div>
+            </Box>
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="btn btn-primary"
-            style={{ width: '100%', padding: '0.75rem', marginTop: '0.5rem' }}
-          >
-            <span>{loading ? 'Authenticating...' : 'Sign In to Admin Portal'}</span>
-            <ArrowRight size={16} />
-          </button>
-        </form>
+            <Button
+              type="submit"
+              variant="contained"
+              size="large"
+              disabled={loading}
+              endIcon={
+                loading ? (
+                  <CircularProgress size={16} color="inherit" />
+                ) : (
+                  <ArrowForwardRoundedIcon fontSize="small" />
+                )
+              }
+              sx={{
+                py: 1.25,
+                mt: 1,
+                fontSize: '0.92rem',
+                borderRadius: 2.5,
+              }}
+            >
+              {loading ? 'Authenticating...' : 'Sign In to Admin Portal'}
+            </Button>
+          </Box>
 
-        {/* Quick Demo Credentials Autofill Pill */}
-        <div style={{ marginTop: '1.75rem', width: '100%', textAlign: 'center', borderTop: '1px solid var(--border-subtle)', paddingTop: '1.25rem' }}>
-          <button
-            type="button"
+          {/* Quick Demo Credentials Autofill Pill */}
+          <Divider sx={{ width: '100%', my: 3 }} />
+
+          <Button
+            variant="text"
+            size="small"
             onClick={handleFillDemo}
-            className="btn btn-ghost btn-sm"
-            style={{ fontSize: '0.75rem', color: 'var(--accent-cyan)' }}
+            startIcon={<AutoAwesomeRoundedIcon sx={{ color: 'secondary.main' }} />}
+            sx={{
+              color: 'primary.main',
+              fontSize: '0.78rem',
+              fontWeight: 600,
+              bgcolor: 'rgba(0, 82, 255, 0.05)',
+              px: 2,
+              py: 0.75,
+              borderRadius: 2,
+              '&:hover': {
+                bgcolor: 'rgba(0, 82, 255, 0.1)',
+              },
+            }}
           >
-            <Sparkles size={13} />
-            <span>Use Quick Demo Credentials (admin@datadaddy.com / admin123)</span>
-          </button>
-        </div>
-      </div>
-    </div>
+            Autofill Demo Credentials (admin@datadaddy.com / admin123)
+          </Button>
+        </CardContent>
+      </Card>
+    </Box>
   );
 };
+export default LoginPage;

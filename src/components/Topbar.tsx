@@ -1,158 +1,238 @@
-import React, { useState, useEffect } from 'react';
-import { Store, RefreshCw, Database } from 'lucide-react';
+import React, { useState } from 'react';
+import {
+  AppBar,
+  Toolbar,
+  Box,
+  Typography,
+  FormControl,
+  Select,
+  MenuItem,
+  Avatar,
+  IconButton,
+  Tooltip,
+  Menu,
+  ListItemIcon,
+  Divider,
+} from '@mui/material';
+import MenuRoundedIcon from '@mui/icons-material/MenuRounded';
+import StoreRoundedIcon from '@mui/icons-material/StoreRounded';
+import LogoutRoundedIcon from '@mui/icons-material/LogoutRounded';
+import ShieldRoundedIcon from '@mui/icons-material/ShieldRounded';
 import { useAdminAuth } from '../context/AdminAuthContext';
-import { adminApi, API_BASE_URL } from '../services/adminApi';
 
 interface TopbarProps {
-  title: string;
-  subtitle?: string;
-  onRefresh?: () => void;
-  isRefreshing?: boolean;
+  onToggleSidebar?: () => void;
+  isSidebarOpen?: boolean;
 }
 
-export const Topbar: React.FC<TopbarProps> = ({ title, subtitle, onRefresh, isRefreshing }) => {
-  const { selectedShopId, setSelectedShopId, shops, addToast, refreshShops } = useAdminAuth();
-  const [backendOnline, setBackendOnline] = useState<boolean | null>(null);
-  const [seeding, setSeeding] = useState(false);
+export const Topbar: React.FC<TopbarProps> = ({ onToggleSidebar, isSidebarOpen }) => {
+  const { user, selectedShopId, setSelectedShopId, shops, logout } = useAdminAuth();
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const isMenuOpen = Boolean(anchorEl);
 
-  // Check health of live backend API once on mount
-  const checkHealth = async () => {
-    try {
-      const res = await fetch(`${API_BASE_URL}/health`);
-      setBackendOnline(res.ok);
-    } catch {
-      setBackendOnline(false);
-    }
+  const handleProfileMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
+    setAnchorEl(event.currentTarget);
   };
 
-  useEffect(() => {
-    checkHealth();
-  }, []);
+  const handleMenuClose = () => {
+    setAnchorEl(null);
+  };
 
-  const handleSeed = async () => {
-    setSeeding(true);
-    try {
-      const res = await adminApi.triggerSeed(true);
-      addToast('success', res.message || 'Seeded realistic multi-tenant data!');
-      await refreshShops();
-      if (onRefresh) onRefresh();
-    } catch (e: any) {
-      addToast('error', e.message || 'Seeding failed');
-    } finally {
-      setSeeding(false);
-    }
+  const handleLogout = () => {
+    handleMenuClose();
+    logout();
   };
 
   return (
-    <header
-      style={{
-        height: '70px',
-        backgroundColor: '#ffffff',
-        borderBottom: '1px solid var(--border-subtle)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        padding: '0 2.5rem',
-        position: 'sticky',
-        top: 0,
+    <AppBar
+      position="sticky"
+      elevation={0}
+      sx={{
+        backgroundColor: '#FFFFFF',
+        color: '#0F172A',
+        borderBottom: '1px solid #E2E8F0',
         zIndex: 30,
-        boxShadow: 'var(--shadow-sm)',
       }}
     >
-      {/* Title & Subtitle */}
-      <div>
-        <h1 style={{ fontSize: '1.25rem', fontWeight: 700, color: 'var(--text-primary)' }}>{title}</h1>
-        {subtitle && <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{subtitle}</p>}
-      </div>
+      <Toolbar
+        sx={{
+          justifyContent: 'space-between',
+          px: { xs: 2, sm: 3, md: 4 },
+          minHeight: '64px !important',
+        }}
+      >
+        {/* Left: Sidebar Toggle + Clean Global Shop Selector */}
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+          {onToggleSidebar && (
+            <Tooltip title={isSidebarOpen ? 'Collapse menu' : 'Expand menu'}>
+              <IconButton
+                onClick={onToggleSidebar}
+                edge="start"
+                sx={{
+                  color: '#475569',
+                  bgcolor: '#F8FAFC',
+                  border: '1px solid #E2E8F0',
+                  borderRadius: 2,
+                  p: 0.85,
+                  '&:hover': {
+                    bgcolor: '#F1F5F9',
+                    color: '#0F172A',
+                  },
+                }}
+              >
+                <MenuRoundedIcon fontSize="small" />
+              </IconButton>
+            </Tooltip>
+          )}
 
-      {/* Action Controls */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-        {/* Backend Connectivity Status */}
-        <div
-          title={backendOnline ? 'Render Backend Connected (Live Cloud)' : 'Backend offline - Using local fallback'}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.375rem',
-            padding: '0.35rem 0.75rem',
-            borderRadius: 'var(--radius-full)',
-            backgroundColor: backendOnline ? '#ecfdf5' : '#fef3c7',
-            border: `1px solid ${backendOnline ? '#a7f3d0' : '#fde68a'}`,
-            fontSize: '0.75rem',
-            fontWeight: 600,
-            color: backendOnline ? '#065f46' : '#92400e',
-          }}
-        >
-          <span
-            style={{
-              width: '8px',
-              height: '8px',
-              borderRadius: '50%',
-              backgroundColor: backendOnline ? '#10b981' : '#f59e0b',
-            }}
-          />
-          <span>{backendOnline ? 'Render Backend Live' : 'Offline / Standalone Mode'}</span>
-        </div>
+          {/* Clean Shop Selector */}
+          <FormControl size="small" sx={{ minWidth: 200, maxWidth: 300 }}>
+            <Select
+              value={selectedShopId}
+              onChange={(e) => setSelectedShopId(e.target.value)}
+              displayEmpty
+              sx={{
+                fontSize: '0.82rem',
+                fontWeight: 600,
+                bgcolor: '#F8FAFC',
+                borderRadius: 2,
+                '& .MuiSelect-select': {
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 0.75,
+                  py: 0.75,
+                },
+              }}
+              startAdornment={<StoreRoundedIcon sx={{ color: 'text.secondary', mr: 0.75, fontSize: 18 }} />}
+            >
+              <MenuItem value="all" sx={{ fontSize: '0.82rem', fontWeight: 600 }}>
+                🌐 All Shops
+              </MenuItem>
+              {shops.map((shop) => (
+                <MenuItem key={shop._id} value={shop._id} sx={{ fontSize: '0.82rem' }}>
+                  🏪 {shop.name} {shop.address?.city ? `(${shop.address.city})` : ''}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        </Box>
 
-        {/* Global Shop Selector Dropdown */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <Store size={16} color="var(--text-muted)" />
-          <select
-            value={selectedShopId}
-            onChange={(e) => setSelectedShopId(e.target.value)}
-            className="select-field"
-            style={{
-              padding: '0.45rem 0.85rem',
-              fontSize: '0.8125rem',
-              fontWeight: 600,
-              minWidth: '220px',
-              backgroundColor: '#ffffff',
-              borderColor: selectedShopId !== 'all' ? 'var(--accent-primary)' : 'var(--border-medium)',
-              color: 'var(--text-primary)',
+        {/* Right: Avatar & Logged User Info */}
+        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+          <Box
+            onClick={handleProfileMenuOpen}
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 1.25,
+              cursor: 'pointer',
+              p: '4px 10px 4px 6px',
+              borderRadius: 3,
+              border: '1px solid #E2E8F0',
+              bgcolor: '#F8FAFC',
+              transition: 'all 0.15s ease-in-out',
+              '&:hover': {
+                bgcolor: '#F1F5F9',
+                borderColor: '#CBD5E1',
+              },
             }}
           >
-            <option value="all">🌐 All Shops (Global Platform)</option>
-            {shops.map((shop) => (
-              <option key={shop._id} value={shop._id}>
-                🏪 {shop.name} ({shop.address?.city || 'India'})
-              </option>
-            ))}
-          </select>
-        </div>
+            <Avatar
+              sx={{
+                width: 34,
+                height: 34,
+                bgcolor: 'primary.main',
+                color: '#FFFFFF',
+                fontWeight: 800,
+                fontSize: '0.82rem',
+                boxShadow: '0 2px 6px rgba(0, 82, 255, 0.25)',
+              }}
+            >
+              {user?.name ? user.name.slice(0, 2).toUpperCase() : 'SA'}
+            </Avatar>
 
-        {/* Refresh Data Button */}
-        {onRefresh && (
-          <button
-            onClick={onRefresh}
-            className="btn btn-secondary btn-sm"
-            title="Refresh All Data"
-            disabled={isRefreshing}
+            <Box sx={{ display: { xs: 'none', sm: 'flex' }, flexDirection: 'column' }}>
+              <Typography
+                variant="body2"
+                sx={{
+                  fontWeight: 700,
+                  color: '#0F172A',
+                  fontSize: '0.82rem',
+                  lineHeight: 1.2,
+                }}
+              >
+                {user?.name || 'Super Admin'}
+              </Typography>
+              <Typography
+                variant="caption"
+                sx={{
+                  color: '#64748B',
+                  fontSize: '0.72rem',
+                  lineHeight: 1,
+                  mt: 0.2,
+                }}
+              >
+                {user?.email || 'admin@datadaddy.com'}
+              </Typography>
+            </Box>
+          </Box>
+
+          {/* Profile Dropdown Menu */}
+          <Menu
+            anchorEl={anchorEl}
+            open={isMenuOpen}
+            onClose={handleMenuClose}
+            transformOrigin={{ horizontal: 'right', vertical: 'top' }}
+            anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
+            slotProps={{
+              paper: {
+                sx: {
+                  width: 230,
+                  mt: 1.2,
+                  p: 0.5,
+                  borderRadius: 2.5,
+                  boxShadow: '0 10px 30px rgba(0, 0, 0, 0.12)',
+                  border: '1px solid #E2E8F0',
+                },
+              },
+            }}
           >
-            <RefreshCw size={14} className={isRefreshing ? 'spin-anim' : ''} />
-            <span>Refresh</span>
-          </button>
-        )}
+            <Box sx={{ px: 2, py: 1.5 }}>
+              <Typography variant="subtitle2" sx={{ fontWeight: 800, color: '#0F172A' }}>
+                {user?.name || 'Super Admin'}
+              </Typography>
+              <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block' }}>
+                {user?.email || 'admin@datadaddy.com'}
+              </Typography>
+            </Box>
 
-        {/* Instant Multi-Tenant Seeder */}
-        <button
-          onClick={handleSeed}
-          disabled={seeding}
-          className="btn btn-primary btn-sm"
-          title="Seed realistic multi-tenant demo shops, technicians, and repair issues"
-        >
-          <Database size={14} />
-          <span>{seeding ? 'Seeding...' : 'Seed Demo Data'}</span>
-        </button>
-      </div>
+            <Divider sx={{ my: 0.5 }} />
 
-      <style>{`
-        .spin-anim {
-          animation: spin 1s linear infinite;
-        }
-        @keyframes spin {
-          100% { transform: rotate(360deg); }
-        }
-      `}</style>
-    </header>
+            <MenuItem sx={{ py: 1, borderRadius: 1.5 }}>
+              <ListItemIcon sx={{ minWidth: 32 }}>
+                <ShieldRoundedIcon fontSize="small" sx={{ color: 'primary.main' }} />
+              </ListItemIcon>
+              <Typography sx={{ fontSize: '0.82rem', fontWeight: 600 }}>Super Admin Access</Typography>
+            </MenuItem>
+
+            <MenuItem
+              onClick={handleLogout}
+              sx={{
+                py: 1,
+                borderRadius: 1.5,
+                color: 'error.main',
+                '&:hover': { bgcolor: 'rgba(239, 68, 68, 0.08)' },
+              }}
+            >
+              <ListItemIcon sx={{ minWidth: 32 }}>
+                <LogoutRoundedIcon fontSize="small" sx={{ color: 'error.main' }} />
+              </ListItemIcon>
+              <Typography sx={{ fontSize: '0.82rem', fontWeight: 600, color: 'error.main' }}>Sign Out</Typography>
+            </MenuItem>
+          </Menu>
+        </Box>
+      </Toolbar>
+    </AppBar>
   );
 };
+export default Topbar;

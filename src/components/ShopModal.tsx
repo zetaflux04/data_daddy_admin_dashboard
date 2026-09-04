@@ -1,5 +1,25 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { X, Store, Check, UploadCloud, Loader2 } from 'lucide-react';
+import {
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  TextField,
+  FormControl,
+  Select,
+  MenuItem,
+  Button,
+  IconButton,
+  Avatar,
+  Box,
+  Typography,
+  CircularProgress,
+} from '@mui/material';
+import CloseRoundedIcon from '@mui/icons-material/CloseRounded';
+import StoreRoundedIcon from '@mui/icons-material/StoreRounded';
+import CloudUploadRoundedIcon from '@mui/icons-material/CloudUploadRounded';
+import CheckRoundedIcon from '@mui/icons-material/CheckRounded';
+
 import type { ShopItem } from '../types/admin';
 import { adminApi, resolveImageUrl } from '../services/adminApi';
 import { useAdminAuth } from '../context/AdminAuthContext';
@@ -37,8 +57,8 @@ export const ShopModal: React.FC<ShopModalProps> = ({ shop, isOpen, onClose, onS
       setCity(shop.address?.city || '');
       setState(shop.address?.state || '');
       setPincode(shop.address?.pincode || '');
-      setPlan(shop.subscription.plan);
-      setStatus(shop.subscription.status);
+      setPlan(shop.subscription?.plan || 'free');
+      setStatus(shop.subscription?.status || 'active');
     } else {
       setName('');
       setOwnerName('');
@@ -70,8 +90,6 @@ export const ShopModal: React.FC<ShopModalProps> = ({ shop, isOpen, onClose, onS
       setIsUploadingLogo(false);
     }
   };
-
-  if (!isOpen) return null;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -117,227 +135,191 @@ export const ShopModal: React.FC<ShopModalProps> = ({ shop, isOpen, onClose, onS
   };
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-        <div className="modal-header">
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <Store size={20} color="var(--accent-primary)" />
-            <h3 style={{ fontSize: '1.15rem' }}>{shop ? 'Edit Shop Profile' : 'Onboard New Repair Shop'}</h3>
-          </div>
-          <button onClick={onClose} className="btn btn-ghost btn-sm" style={{ padding: '0.4rem' }}>
-            <X size={18} />
-          </button>
-        </div>
+    <Dialog open={isOpen} onClose={onClose} maxWidth="sm" fullWidth>
+      <DialogTitle sx={{ m: 0, p: 2.5, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25 }}>
+          <StoreRoundedIcon sx={{ color: 'primary.main', fontSize: 26 }} />
+          <Typography variant="h6" sx={{ fontWeight: 800, fontSize: '1.15rem' }}>
+            {shop ? 'Edit Shop Profile' : 'Onboard New Repair Shop'}
+          </Typography>
+        </Box>
+        <IconButton size="small" onClick={onClose}>
+          <CloseRoundedIcon fontSize="small" />
+        </IconButton>
+      </DialogTitle>
 
-        <form onSubmit={handleSubmit}>
-          <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-            {/* Shop Logo & S3 Cloud Upload */}
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '1rem',
-                padding: '0.85rem',
-                backgroundColor: 'rgba(79, 70, 229, 0.04)',
-                border: '1px dashed rgba(79, 70, 229, 0.3)',
-                borderRadius: 'var(--radius-md)',
+      <Box component="form" onSubmit={handleSubmit}>
+        <DialogContent dividers sx={{ p: 3, display: 'flex', flexDirection: 'column', gap: 2.5 }}>
+          {/* Logo Upload Box */}
+          <Box
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 2,
+              p: 2,
+              borderRadius: 2.5,
+              bgcolor: 'rgba(0, 82, 255, 0.04)',
+              border: '1px dashed rgba(0, 82, 255, 0.3)',
+            }}
+          >
+            <Avatar
+              src={logoUrl ? resolveImageUrl(logoUrl) : undefined}
+              sx={{
+                width: 58,
+                height: 58,
+                borderRadius: 2.5,
+                bgcolor: '#FFFFFF',
+                color: 'primary.main',
+                border: '1px solid #CBD5E1',
               }}
             >
-              <div
-                style={{
-                  width: '56px',
-                  height: '56px',
-                  borderRadius: 'var(--radius-md)',
-                  backgroundColor: 'var(--bg-card)',
-                  border: '1px solid var(--border-subtle)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  overflow: 'hidden',
-                  flexShrink: 0,
-                }}
-              >
-                {logoUrl ? (
-                  <img
-                    src={resolveImageUrl(logoUrl)}
-                    alt="Shop Logo"
-                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                  />
-                ) : (
-                  <Store size={26} color="var(--accent-primary)" />
-                )}
-              </div>
+              <StoreRoundedIcon sx={{ fontSize: 32 }} />
+            </Avatar>
 
-              <div style={{ flex: 1 }}>
-                <div style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--text-primary)' }}>
-                  Shop Logo / Profile Photo (AWS S3)
-                </div>
-                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '0.4rem' }}>
-                  Stored securely in Amazon S3 storage
-                </div>
-                <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept="image/*"
-                    style={{ display: 'none' }}
-                    onChange={handleLogoUpload}
-                  />
-                  <button
-                    type="button"
-                    className="btn btn-secondary btn-sm"
-                    disabled={isUploadingLogo}
-                    onClick={() => fileInputRef.current?.click()}
-                    style={{ fontSize: '0.75rem', padding: '0.3rem 0.6rem', display: 'flex', alignItems: 'center', gap: '0.3rem' }}
-                  >
-                    {isUploadingLogo ? (
-                      <Loader2 size={13} className="spin" />
-                    ) : (
-                      <UploadCloud size={13} />
-                    )}
-                    <span>{isUploadingLogo ? 'Uploading to S3...' : 'Upload Logo'}</span>
-                  </button>
-                  {logoUrl && (
-                    <button
-                      type="button"
-                      className="btn btn-ghost btn-sm"
-                      onClick={() => setLogoUrl('')}
-                      style={{ fontSize: '0.75rem', padding: '0.3rem 0.5rem', color: 'var(--accent-rose)' }}
-                    >
-                      Remove
-                    </button>
-                  )}
-                </div>
-              </div>
-            </div>
+            <Box sx={{ flex: 1 }}>
+              <Typography variant="body2" sx={{ fontWeight: 700, color: '#0F172A' }}>
+                Center Logo / Storefront Photo
+              </Typography>
+              <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block', mb: 1 }}>
+                Direct cloud upload to AWS S3
+              </Typography>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-              <div className="input-group">
-                <label className="input-label">Shop Name *</label>
-                <input
-                  type="text"
-                  className="input-field"
-                  placeholder="e.g. Metro Mobile Care"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  required
-                />
-              </div>
-
-              <div className="input-group">
-                <label className="input-label">Owner Name *</label>
-                <input
-                  type="text"
-                  className="input-field"
-                  placeholder="e.g. Ramesh Patel"
-                  value={ownerName}
-                  onChange={(e) => setOwnerName(e.target.value)}
-                  required
-                />
-              </div>
-            </div>
-
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-              <div className="input-group">
-                <label className="input-label">Mobile Number *</label>
-                <input
-                  type="tel"
-                  className="input-field"
-                  placeholder="10-digit mobile"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  required
-                />
-              </div>
-
-              <div className="input-group">
-                <label className="input-label">City *</label>
-                <input
-                  type="text"
-                  className="input-field"
-                  placeholder="e.g. Mumbai"
-                  value={city}
-                  onChange={(e) => setCity(e.target.value)}
-                  required
-                />
-              </div>
-            </div>
-
-            <div className="input-group">
-              <label className="input-label">Street Address</label>
               <input
-                type="text"
-                className="input-field"
-                placeholder="Shop number, market, road..."
-                value={street}
-                onChange={(e) => setStreet(e.target.value)}
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleLogoUpload}
+                style={{ display: 'none' }}
               />
-            </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-              <div className="input-group">
-                <label className="input-label">State</label>
-                <input
-                  type="text"
-                  className="input-field"
-                  placeholder="e.g. Maharashtra"
-                  value={state}
-                  onChange={(e) => setState(e.target.value)}
-                />
-              </div>
+              <Button
+                variant="outlined"
+                size="small"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={isUploadingLogo}
+                startIcon={
+                  isUploadingLogo ? (
+                    <CircularProgress size={14} color="inherit" />
+                  ) : (
+                    <CloudUploadRoundedIcon fontSize="small" />
+                  )
+                }
+                sx={{ fontSize: '0.75rem', py: 0.5 }}
+              >
+                {isUploadingLogo ? 'Uploading S3...' : 'Choose Image'}
+              </Button>
+            </Box>
+          </Box>
 
-              <div className="input-group">
-                <label className="input-label">Pincode</label>
-                <input
-                  type="text"
-                  className="input-field"
-                  placeholder="e.g. 400001"
-                  value={pincode}
-                  onChange={(e) => setPincode(e.target.value)}
-                />
-              </div>
-            </div>
+          {/* Shop Basic Info */}
+          <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 2 }}>
+            <TextField
+              fullWidth
+              label="Shop Name"
+              placeholder="e.g. QuickFix Mobiles"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              required
+            />
+            <TextField
+              fullWidth
+              label="Owner Full Name"
+              placeholder="e.g. Ramesh Kumar"
+              value={ownerName}
+              onChange={(e) => setOwnerName(e.target.value)}
+              required
+            />
+          </Box>
 
-            {/* Subscription Controls */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-              <div className="input-group">
-                <label className="input-label">Subscription Tier</label>
-                <select
-                  className="select-field"
-                  value={plan}
-                  onChange={(e) => setPlan(e.target.value as any)}
-                >
-                  <option value="free">Free Tier</option>
-                  <option value="pro">Pro Subscription (₹999/mo)</option>
-                </select>
-              </div>
+          <TextField
+            fullWidth
+            label="Phone Number"
+            placeholder="+91 9876543210"
+            value={phone}
+            onChange={(e) => setPhone(e.target.value)}
+            required
+          />
 
-              <div className="input-group">
-                <label className="input-label">Shop Status</label>
-                <select
-                  className="select-field"
-                  value={status}
-                  onChange={(e) => setStatus(e.target.value as any)}
-                >
-                  <option value="active">Active</option>
-                  <option value="expired">Expired</option>
-                  <option value="canceled">Suspended / Canceled</option>
-                </select>
-              </div>
-            </div>
-          </div>
+          {/* Address Fields */}
+          <Typography variant="caption" sx={{ fontWeight: 800, textTransform: 'uppercase', color: 'text.secondary', mt: 1 }}>
+            Location & Address
+          </Typography>
 
-          <div className="modal-footer">
-            <button type="button" onClick={onClose} className="btn btn-ghost">
-              Cancel
-            </button>
-            <button type="submit" disabled={isSubmitting} className="btn btn-primary">
-              <Check size={16} />
-              <span>{isSubmitting ? 'Saving...' : shop ? 'Save Changes' : 'Create Shop'}</span>
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
+          <TextField
+            fullWidth
+            label="Street Address"
+            placeholder="Shop 12, Main Market"
+            value={street}
+            onChange={(e) => setStreet(e.target.value)}
+          />
+
+          <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 1.5 }}>
+            <TextField
+              label="City"
+              placeholder="Mumbai"
+              value={city}
+              onChange={(e) => setCity(e.target.value)}
+            />
+            <TextField
+              label="State"
+              placeholder="Maharashtra"
+              value={state}
+              onChange={(e) => setState(e.target.value)}
+            />
+            <TextField
+              label="Pincode"
+              placeholder="400001"
+              value={pincode}
+              onChange={(e) => setPincode(e.target.value)}
+            />
+          </Box>
+
+          {/* Subscription Settings */}
+          <Typography variant="caption" sx={{ fontWeight: 800, textTransform: 'uppercase', color: 'text.secondary', mt: 1 }}>
+            Plan & Status
+          </Typography>
+
+          <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 2 }}>
+            <FormControl fullWidth size="small">
+              <Typography variant="caption" sx={{ fontWeight: 700, mb: 0.5 }}>Subscription Plan</Typography>
+              <Select
+                value={plan}
+                onChange={(e) => setPlan(e.target.value as any)}
+              >
+                <MenuItem value="free">🌱 Free Tier</MenuItem>
+                <MenuItem value="pro">⭐ Pro Plan</MenuItem>
+              </Select>
+            </FormControl>
+
+            <FormControl fullWidth size="small">
+              <Typography variant="caption" sx={{ fontWeight: 700, mb: 0.5 }}>Account Status</Typography>
+              <Select
+                value={status}
+                onChange={(e) => setStatus(e.target.value as any)}
+              >
+                <MenuItem value="active">🟢 Active</MenuItem>
+                <MenuItem value="expired">🟡 Expired</MenuItem>
+                <MenuItem value="canceled">🔴 Suspended</MenuItem>
+              </Select>
+            </FormControl>
+          </Box>
+        </DialogContent>
+
+        <DialogActions sx={{ p: 2.5 }}>
+          <Button variant="outlined" onClick={onClose} sx={{ color: '#475569', borderColor: '#CBD5E1' }}>
+            Cancel
+          </Button>
+          <Button
+            type="submit"
+            variant="contained"
+            disabled={isSubmitting}
+            startIcon={isSubmitting ? <CircularProgress size={16} color="inherit" /> : <CheckRoundedIcon fontSize="small" />}
+          >
+            {isSubmitting ? 'Saving...' : shop ? 'Save Changes' : 'Register Shop'}
+          </Button>
+        </DialogActions>
+      </Box>
+    </Dialog>
   );
 };
+export default ShopModal;

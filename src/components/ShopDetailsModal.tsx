@@ -1,5 +1,29 @@
 import React, { useState, useEffect } from 'react';
-import { X, Store, User, Phone, MapPin, Wrench, IndianRupee, ClipboardList, Users } from 'lucide-react';
+import {
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Typography,
+  Avatar,
+  Chip,
+  Button,
+  IconButton,
+  Box,
+  Paper,
+  CircularProgress,
+} from '@mui/material';
+import CloseRoundedIcon from '@mui/icons-material/CloseRounded';
+import PersonRoundedIcon from '@mui/icons-material/PersonRounded';
+import PhoneRoundedIcon from '@mui/icons-material/PhoneRounded';
+import LocationOnRoundedIcon from '@mui/icons-material/LocationOnRounded';
+import CurrencyRupeeRoundedIcon from '@mui/icons-material/CurrencyRupeeRounded';
+import ReceiptLongRoundedIcon from '@mui/icons-material/ReceiptLongRounded';
+import BuildRoundedIcon from '@mui/icons-material/BuildRounded';
+import PeopleAltRoundedIcon from '@mui/icons-material/PeopleAltRounded';
+import EditRoundedIcon from '@mui/icons-material/EditRounded';
+import PersonAddRoundedIcon from '@mui/icons-material/PersonAddRounded';
+
 import type { ShopItem, TechnicianItem } from '../types/admin';
 import { StatusBadge } from './StatusBadge';
 import { adminApi, resolveImageUrl } from '../services/adminApi';
@@ -36,260 +60,230 @@ export const ShopDetailsModal: React.FC<ShopDetailsModalProps> = ({
   if (!isOpen || !shop) return null;
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div
-        className="modal-content"
-        style={{ maxWidth: '680px' }}
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* Header */}
-        <div className="modal-header">
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-            <div
-              style={{
-                width: '46px',
-                height: '46px',
-                borderRadius: 'var(--radius-md)',
-                backgroundColor: '#e0e7ff',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: '#4338ca',
-                overflow: 'hidden',
-                flexShrink: 0,
-                border: '1px solid var(--border-subtle)',
-              }}
+    <Dialog open={isOpen} onClose={onClose} maxWidth="md" fullWidth>
+      <DialogTitle sx={{ m: 0, p: 2.5, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+          <Avatar
+            src={shop.logoUrl ? resolveImageUrl(shop.logoUrl) : undefined}
+            sx={{
+              width: 50,
+              height: 50,
+              borderRadius: 2.5,
+              bgcolor: 'primary.main',
+              color: '#FFFFFF',
+              fontWeight: 800,
+              fontSize: '1.1rem',
+              border: '1px solid #CBD5E1',
+            }}
+          >
+            {shop.name.charAt(0)}
+          </Avatar>
+          <Box>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
+              <Typography variant="h6" sx={{ fontWeight: 800, fontSize: '1.2rem', color: '#0F172A' }}>
+                {shop.name}
+              </Typography>
+              <StatusBadge status={shop.subscription?.plan || 'free'} type="plan" />
+              <Chip
+                label={shop.subscription?.status || 'active'}
+                size="small"
+                color={shop.subscription?.status === 'active' ? 'success' : 'default'}
+                sx={{ fontWeight: 700, fontSize: '0.65rem', textTransform: 'uppercase', borderRadius: 1.5 }}
+              />
+            </Box>
+            <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+              Registered Repair Center • ID: {shop._id.slice(-8).toUpperCase()}
+            </Typography>
+          </Box>
+        </Box>
+        <IconButton size="small" onClick={onClose}>
+          <CloseRoundedIcon fontSize="small" />
+        </IconButton>
+      </DialogTitle>
+
+      <DialogContent dividers sx={{ p: 3, display: 'flex', flexDirection: 'column', gap: 3 }}>
+        {/* KPI Grid */}
+        <Box
+          sx={{
+            display: 'grid',
+            gridTemplateColumns: { xs: 'repeat(2, 1fr)', sm: 'repeat(4, 1fr)' },
+            gap: 1.5,
+          }}
+        >
+          <Paper sx={{ p: 1.5, bgcolor: '#F8FAFC', borderRadius: 2 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, color: 'text.secondary', mb: 0.5 }}>
+              <CurrencyRupeeRoundedIcon sx={{ fontSize: 14 }} />
+              <Typography variant="caption" sx={{ fontWeight: 700 }}>Total Revenue</Typography>
+            </Box>
+            <Typography variant="h6" sx={{ fontWeight: 800, color: 'success.main' }}>
+              ₹{(shop.stats?.totalRevenue || 0).toLocaleString()}
+            </Typography>
+          </Paper>
+
+          <Paper sx={{ p: 1.5, bgcolor: '#F8FAFC', borderRadius: 2 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, color: 'text.secondary', mb: 0.5 }}>
+              <ReceiptLongRoundedIcon sx={{ fontSize: 14 }} />
+              <Typography variant="caption" sx={{ fontWeight: 700 }}>Total Orders</Typography>
+            </Box>
+            <Typography variant="h6" sx={{ fontWeight: 800, color: '#0F172A' }}>
+              {shop.stats?.totalOrders || 0}
+            </Typography>
+          </Paper>
+
+          <Paper sx={{ p: 1.5, bgcolor: '#F8FAFC', borderRadius: 2 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, color: 'text.secondary', mb: 0.5 }}>
+              <BuildRoundedIcon sx={{ fontSize: 14 }} />
+              <Typography variant="caption" sx={{ fontWeight: 700 }}>Technicians</Typography>
+            </Box>
+            <Typography variant="h6" sx={{ fontWeight: 800, color: 'primary.main' }}>
+              {shop.stats?.totalStaff || 0}
+            </Typography>
+          </Paper>
+
+          <Paper sx={{ p: 1.5, bgcolor: '#F8FAFC', borderRadius: 2 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, color: 'text.secondary', mb: 0.5 }}>
+              <PeopleAltRoundedIcon sx={{ fontSize: 14 }} />
+              <Typography variant="caption" sx={{ fontWeight: 700 }}>Customers</Typography>
+            </Box>
+            <Typography variant="h6" sx={{ fontWeight: 800, color: '#0F172A' }}>
+              {shop.stats?.totalCustomers || 0}
+            </Typography>
+          </Paper>
+        </Box>
+
+        {/* Center Details & Address */}
+        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)' }, gap: 2.5 }}>
+          <Paper sx={{ p: 2, borderRadius: 2.5 }}>
+            <Typography variant="caption" sx={{ fontWeight: 800, color: 'text.secondary', textTransform: 'uppercase' }}>
+              Proprietor / Contact
+            </Typography>
+            <Box sx={{ mt: 1, display: 'flex', flexDirection: 'column', gap: 1 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <PersonRoundedIcon sx={{ fontSize: 18, color: 'primary.main' }} />
+                <Typography variant="body2" sx={{ fontWeight: 700, color: '#0F172A' }}>
+                  {shop.ownerName}
+                </Typography>
+              </Box>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <PhoneRoundedIcon sx={{ fontSize: 18, color: 'secondary.main' }} />
+                <Typography variant="body2" sx={{ fontWeight: 600, color: 'secondary.dark' }}>
+                  {shop.phone}
+                </Typography>
+              </Box>
+            </Box>
+          </Paper>
+
+          <Paper sx={{ p: 2, borderRadius: 2.5 }}>
+            <Typography variant="caption" sx={{ fontWeight: 800, color: 'text.secondary', textTransform: 'uppercase' }}>
+              Service Location
+            </Typography>
+            <Box sx={{ mt: 1, display: 'flex', alignItems: 'flex-start', gap: 1 }}>
+              <LocationOnRoundedIcon sx={{ fontSize: 18, color: 'error.main', mt: 0.2 }} />
+              <Typography variant="body2" sx={{ color: '#334155', lineHeight: 1.4 }}>
+                {shop.address?.street ? `${shop.address.street}, ` : ''}
+                {shop.address?.city || 'City not specified'}
+                {shop.address?.state ? `, ${shop.address.state}` : ''}
+                {shop.address?.pincode ? ` - ${shop.address.pincode}` : ''}
+              </Typography>
+            </Box>
+          </Paper>
+        </Box>
+
+        {/* Staff & Technicians Roster */}
+        <Box>
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1.5 }}>
+            <Typography variant="subtitle2" sx={{ fontWeight: 800, color: '#0F172A' }}>
+              Staff & Technicians Roster ({techs.length})
+            </Typography>
+            <Button
+              variant="outlined"
+              size="small"
+              onClick={() => onAddTechnician(shop._id)}
+              startIcon={<PersonAddRoundedIcon fontSize="small" />}
+              sx={{ fontSize: '0.75rem', py: 0.4 }}
             >
-              {shop.logoUrl ? (
-                <img
-                  src={resolveImageUrl(shop.logoUrl)}
-                  alt={shop.name}
-                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                />
-              ) : (
-                <Store size={22} />
-              )}
-            </div>
-            <div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <h3 style={{ fontSize: '1.25rem', fontWeight: 700 }}>{shop.name}</h3>
-                <StatusBadge status={shop.subscription.plan} type="plan" />
-                <span
-                  style={{
-                    fontSize: '0.7rem',
-                    fontWeight: 700,
-                    textTransform: 'uppercase',
-                    padding: '0.2rem 0.5rem',
-                    borderRadius: 'var(--radius-full)',
-                    backgroundColor: shop.subscription.status === 'active' ? '#dcfce7' : '#fee2e2',
-                    color: shop.subscription.status === 'active' ? '#15803d' : '#b91c1c',
+              + Add Staff
+            </Button>
+          </Box>
+
+          {loading ? (
+            <Box sx={{ textAlign: 'center', py: 3 }}>
+              <CircularProgress size={24} />
+            </Box>
+          ) : techs.length === 0 ? (
+            <Paper sx={{ p: 3, textAlign: 'center', borderRadius: 2, bgcolor: '#F8FAFC' }}>
+              <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                No technicians registered for this center yet.
+              </Typography>
+            </Paper>
+          ) : (
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+              {techs.map((t) => (
+                <Paper
+                  key={t._id}
+                  sx={{
+                    p: 1.5,
+                    px: 2,
+                    borderRadius: 2,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    bgcolor: '#FFFFFF',
                   }}
                 >
-                  {shop.subscription.status}
-                </span>
-              </div>
-              <p style={{ fontSize: '0.8125rem', color: 'var(--text-muted)' }}>
-                Registered Service Center • Code ID: {shop._id.slice(-6).toUpperCase()}
-              </p>
-            </div>
-          </div>
-          <button onClick={onClose} className="btn btn-ghost btn-sm" style={{ padding: '0.35rem' }}>
-            <X size={20} />
-          </button>
-        </div>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                    <Avatar
+                      sx={{
+                        width: 34,
+                        height: 34,
+                        bgcolor: 'rgba(0, 82, 255, 0.1)',
+                        color: 'primary.main',
+                        fontWeight: 700,
+                        fontSize: '0.8rem',
+                      }}
+                    >
+                      {t.name.charAt(0)}
+                    </Avatar>
+                    <Box>
+                      <Typography variant="body2" sx={{ fontWeight: 700, color: '#0F172A' }}>
+                        {t.name}
+                      </Typography>
+                      <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                        📞 {t.phone}
+                      </Typography>
+                    </Box>
+                  </Box>
 
-        {/* Body */}
-        <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-          {/* Key Financial & Operational Stats */}
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(4, 1fr)',
-              gap: '0.75rem',
-              backgroundColor: '#f8fafc',
-              padding: '1rem',
-              borderRadius: 'var(--radius-md)',
-              border: '1px solid var(--border-subtle)',
-            }}
-          >
-            <div>
-              <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-                <IndianRupee size={12} /> Total Revenue
-              </div>
-              <div style={{ fontSize: '1.15rem', fontWeight: 800, color: 'var(--accent-emerald)', marginTop: '0.2rem' }}>
-                ₹{(shop.stats?.totalRevenue || 0).toLocaleString('en-IN')}
-              </div>
-            </div>
-            <div>
-              <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-                <ClipboardList size={12} /> Total Orders
-              </div>
-              <div style={{ fontSize: '1.15rem', fontWeight: 800, color: 'var(--text-primary)', marginTop: '0.2rem' }}>
-                {shop.stats?.totalOrders || 0}
-              </div>
-            </div>
-            <div>
-              <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-                <Wrench size={12} /> Technicians
-              </div>
-              <div style={{ fontSize: '1.15rem', fontWeight: 800, color: 'var(--accent-primary)', marginTop: '0.2rem' }}>
-                {shop.stats?.totalStaff || 0}
-              </div>
-            </div>
-            <div>
-              <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-                <Users size={12} /> Customers
-              </div>
-              <div style={{ fontSize: '1.15rem', fontWeight: 800, color: 'var(--text-secondary)', marginTop: '0.2rem' }}>
-                {shop.stats?.totalCustomers || 0}
-              </div>
-            </div>
-          </div>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <StatusBadge status={t.role} type="role" />
+                    <Chip
+                      label={t.isActive ? 'Active' : 'Inactive'}
+                      size="small"
+                      color={t.isActive ? 'success' : 'default'}
+                      variant="outlined"
+                      sx={{ fontSize: '0.65rem', fontWeight: 700, borderRadius: 1.5 }}
+                    />
+                  </Box>
+                </Paper>
+              ))}
+            </Box>
+          )}
+        </Box>
+      </DialogContent>
 
-          {/* Center & Owner Info */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.25rem' }}>
-            <div style={{ background: '#ffffff', padding: '1rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-subtle)' }}>
-              <div style={{ fontSize: '0.8125rem', fontWeight: 700, color: 'var(--text-secondary)', marginBottom: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                Owner & Contact
-              </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', fontSize: '0.875rem' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <User size={15} color="var(--text-muted)" />
-                  <span style={{ fontWeight: 600 }}>{shop.ownerName || 'Center Manager'}</span>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <Phone size={15} color="var(--text-muted)" />
-                  <span>{shop.phone}</span>
-                </div>
-              </div>
-            </div>
-
-            <div style={{ background: '#ffffff', padding: '1rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-subtle)' }}>
-              <div style={{ fontSize: '0.8125rem', fontWeight: 700, color: 'var(--text-secondary)', marginBottom: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                Location & Address
-              </div>
-              <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.5rem', fontSize: '0.875rem' }}>
-                <MapPin size={16} color="var(--text-muted)" style={{ marginTop: '0.15rem', flexShrink: 0 }} />
-                <div>
-                  <div style={{ fontWeight: 600 }}>{shop.address?.city || 'India'}, {shop.address?.state || 'MH'}</div>
-                  <div style={{ fontSize: '0.8125rem', color: 'var(--text-secondary)' }}>
-                    {shop.address?.street ? `${shop.address.street}, ` : ''}
-                    {shop.address?.pincode ? `PIN: ${shop.address.pincode}` : ''}
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Technicians Working in this Center */}
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
-              <h4 style={{ fontSize: '0.9375rem', fontWeight: 700 }}>
-                Technicians Associated With Center ({techs.length})
-              </h4>
-              <button
-                onClick={() => {
-                  onClose();
-                  onAddTechnician(shop._id);
-                }}
-                className="btn btn-secondary btn-sm"
-              >
-                + Add Technician
-              </button>
-            </div>
-
-            {loading ? (
-              <p style={{ fontSize: '0.8125rem', color: 'var(--text-muted)' }}>Loading staff...</p>
-            ) : techs.length === 0 ? (
-              <div
-                style={{
-                  padding: '1.5rem',
-                  textAlign: 'center',
-                  background: '#f8fafc',
-                  borderRadius: 'var(--radius-md)',
-                  border: '1px dashed var(--border-medium)',
-                  color: 'var(--text-muted)',
-                  fontSize: '0.875rem',
-                }}
-              >
-                No technicians assigned to this center yet.
-              </div>
-            ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                {techs.map((t) => (
-                  <div
-                    key={t._id}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                      padding: '0.65rem 0.85rem',
-                      background: '#ffffff',
-                      borderRadius: 'var(--radius-md)',
-                      border: '1px solid var(--border-subtle)',
-                    }}
-                  >
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
-                      <div
-                        style={{
-                          width: '32px',
-                          height: '32px',
-                          borderRadius: 'var(--radius-full)',
-                          background: '#e0e7ff',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          fontWeight: 700,
-                          color: '#4338ca',
-                          fontSize: '0.75rem',
-                        }}
-                      >
-                        {t.name.slice(0, 2).toUpperCase()}
-                      </div>
-                      <div>
-                        <div style={{ fontWeight: 600, fontSize: '0.875rem' }}>{t.name}</div>
-                        <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{t.phone}</div>
-                      </div>
-                    </div>
-
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                      <StatusBadge status={t.role} type="role" />
-                      <span
-                        style={{
-                          fontSize: '0.7rem',
-                          fontWeight: 600,
-                          padding: '0.15rem 0.45rem',
-                          borderRadius: 'var(--radius-full)',
-                          backgroundColor: t.isActive ? '#dcfce7' : '#fee2e2',
-                          color: t.isActive ? '#15803d' : '#b91c1c',
-                        }}
-                      >
-                        {t.isActive ? 'Active' : 'Inactive'}
-                      </span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Footer */}
-        <div className="modal-footer">
-          <button onClick={onClose} className="btn btn-secondary">
-            Close
-          </button>
-          <button
-            onClick={() => {
-              onClose();
-              onEdit(shop);
-            }}
-            className="btn btn-primary"
-          >
-            Edit Center Profile
-          </button>
-        </div>
-      </div>
-    </div>
+      <DialogActions sx={{ p: 2.5 }}>
+        <Button variant="outlined" onClick={onClose} sx={{ color: '#475569', borderColor: '#CBD5E1' }}>
+          Close
+        </Button>
+        <Button
+          variant="contained"
+          onClick={() => onEdit(shop)}
+          startIcon={<EditRoundedIcon fontSize="small" />}
+        >
+          Edit Center Profile
+        </Button>
+      </DialogActions>
+    </Dialog>
   );
 };
+export default ShopDetailsModal;

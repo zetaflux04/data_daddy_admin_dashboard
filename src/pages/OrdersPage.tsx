@@ -1,16 +1,37 @@
 import React, { useState, useEffect } from 'react';
 import {
-  Search,
-  Eye,
-  Edit2,
-  Trash2,
-  AlertTriangle,
-  MapPin,
-  IndianRupee,
-  Phone,
-  ShoppingBag,
-  Wrench,
-} from 'lucide-react';
+  Box,
+  Typography,
+  Paper,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  TextField,
+  FormControl,
+  Select,
+  MenuItem,
+  InputAdornment,
+  Chip,
+  IconButton,
+  Tooltip,
+  Avatar,
+  CircularProgress,
+  TablePagination,
+} from '@mui/material';
+import SearchRoundedIcon from '@mui/icons-material/SearchRounded';
+import VisibilityRoundedIcon from '@mui/icons-material/VisibilityRounded';
+import EditRoundedIcon from '@mui/icons-material/EditRounded';
+import DeleteOutlineRoundedIcon from '@mui/icons-material/DeleteOutlineRounded';
+import WarningAmberRoundedIcon from '@mui/icons-material/WarningAmberRounded';
+import LocationOnRoundedIcon from '@mui/icons-material/LocationOnRounded';
+import PhoneRoundedIcon from '@mui/icons-material/PhoneRounded';
+import ShoppingBagRoundedIcon from '@mui/icons-material/ShoppingBagRounded';
+import BuildRoundedIcon from '@mui/icons-material/BuildRounded';
+import StoreRoundedIcon from '@mui/icons-material/StoreRounded';
+
 import type { OrderItem } from '../types/admin';
 import { StatusBadge } from '../components/StatusBadge';
 import { OrderInspectorModal } from '../components/OrderInspectorModal';
@@ -26,6 +47,8 @@ export const OrdersPage: React.FC = () => {
   const [deviceFilter, setDeviceFilter] = useState('all');
   const [orderTypeFilter, setOrderTypeFilter] = useState('all');
   const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
 
   // Modals
   const [inspectOrder, setInspectOrder] = useState<OrderItem | null>(null);
@@ -48,13 +71,14 @@ export const OrdersPage: React.FC = () => {
   };
 
   useEffect(() => {
+    setPage(0);
     fetchOrders();
   }, [selectedShopId, statusFilter, deviceFilter, orderTypeFilter, search]);
 
   const handleDeleteOrder = async (ord: OrderItem) => {
     const typeLabel = (ord.orderType || 'repair') === 'accessory' ? 'accessory sale' : 'repair order';
     const confirmed = window.confirm(
-      `⚠️ Delete ${typeLabel} "${ord.jobId}" for customer ${ord.customerSnapshot.name}?\n\nThis cannot be undone.`
+      `⚠️ Delete ${typeLabel} "${ord.jobId}" for customer ${ord.customerSnapshot.name}?\n\nThis action cannot be undone.`
     );
     if (!confirmed) return;
 
@@ -76,144 +100,136 @@ export const OrdersPage: React.FC = () => {
     { id: 'delivered', label: 'Delivered' },
   ];
 
-  const getOrderTypeBadge = (orderType?: string) => {
-    const isAccessory = orderType === 'accessory';
-    return (
-      <span
-        style={{
-          display: 'inline-flex',
-          alignItems: 'center',
-          gap: '0.2rem',
-          fontSize: '0.625rem',
-          fontWeight: 700,
-          textTransform: 'uppercase',
-          letterSpacing: '0.04em',
-          padding: '0.15rem 0.45rem',
-          borderRadius: '4px',
-          backgroundColor: isAccessory ? 'rgba(168, 85, 247, 0.15)' : 'rgba(59, 130, 246, 0.15)',
-          color: isAccessory ? '#a855f7' : '#3b82f6',
-          border: `1px solid ${isAccessory ? 'rgba(168, 85, 247, 0.3)' : 'rgba(59, 130, 246, 0.3)'}`,
-        }}
-      >
-        {isAccessory ? <ShoppingBag size={9} /> : <Wrench size={9} />}
-        {isAccessory ? 'Accessory' : 'Repair'}
-      </span>
-    );
-  };
-
   return (
-    <div className="page-wrapper" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
       {/* Header */}
-      <div>
-        <h2 style={{ fontSize: '1.5rem', fontWeight: 800 }}>Customer Orders & Repair Issues</h2>
-        <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
-          Review all repair orders and accessory sales across centers. Inspect reported customer issues, device model numbers, costs, customer addresses, and update or delete orders.
-        </p>
-      </div>
+      <Box>
+        <Typography variant="h5" sx={{ fontWeight: 800, color: '#0F172A', letterSpacing: '-0.02em' }}>
+          Customer Repair Orders & Job Cards
+        </Typography>
+        <Typography variant="body2" sx={{ color: 'text.secondary', mt: 0.5 }}>
+          Inspect reported customer issues, device model numbers, costs, customer addresses, and update or delete records.
+        </Typography>
+      </Box>
 
       {/* Filter and Search Bar */}
-      <div className="glass-panel" style={{ padding: '1rem 1.25rem' }}>
-        <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', alignItems: 'center' }}>
+      <Paper sx={{ p: 2.5, borderRadius: 3 }}>
+        <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', alignItems: 'center' }}>
           {/* Search Box */}
-          <div className="search-wrapper" style={{ flex: 1, minWidth: '280px' }}>
-            <Search size={16} />
-            <input
-              type="text"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search by customer issue, device model, product, customer name, phone, or Job ID..."
-              className="input-field search-input"
-            />
-          </div>
+          <TextField
+            placeholder="Search by issue, device, customer name, phone, or Job ID..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            sx={{ flex: 1, minWidth: { xs: '100%', sm: 280 } }}
+            slotProps={{
+              input: {
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <SearchRoundedIcon sx={{ color: 'text.secondary', fontSize: 20 }} />
+                  </InputAdornment>
+                ),
+              },
+            }}
+          />
 
-          {/* Order Type Filter */}
-          <select
-            value={orderTypeFilter}
-            onChange={(e) => setOrderTypeFilter(e.target.value)}
-            className="select-field"
-            style={{ width: '160px' }}
-          >
-            <option value="all">All Types</option>
-            <option value="repair">🔧 Repairs</option>
-            <option value="accessory">🛒 Accessories</option>
-          </select>
+          {/* Order Type Dropdown */}
+          <FormControl size="small" sx={{ minWidth: 150 }}>
+            <Select
+              value={orderTypeFilter}
+              onChange={(e) => setOrderTypeFilter(e.target.value)}
+              displayEmpty
+            >
+              <MenuItem value="all">All Types</MenuItem>
+              <MenuItem value="repair">🔧 Repair Orders</MenuItem>
+              <MenuItem value="accessory">🛒 Accessory Sales</MenuItem>
+            </Select>
+          </FormControl>
 
-          {/* Device Type Filter */}
-          <select
-            value={deviceFilter}
-            onChange={(e) => setDeviceFilter(e.target.value)}
-            className="select-field"
-            style={{ width: '160px' }}
-          >
-            <option value="all">All Devices</option>
-            <option value="mobile">📱 Smartphone</option>
-            <option value="laptop">💻 Laptop</option>
-            <option value="tablet">📟 Tablet</option>
-            <option value="watch">⌚ Smartwatch</option>
-          </select>
-        </div>
+          {/* Device Type Dropdown */}
+          <FormControl size="small" sx={{ minWidth: 150 }}>
+            <Select
+              value={deviceFilter}
+              onChange={(e) => setDeviceFilter(e.target.value)}
+              displayEmpty
+            >
+              <MenuItem value="all">All Devices</MenuItem>
+              <MenuItem value="mobile">📱 Smartphone</MenuItem>
+              <MenuItem value="laptop">💻 Laptop</MenuItem>
+              <MenuItem value="tablet">📟 Tablet</MenuItem>
+              <MenuItem value="watch">⌚ Smartwatch</MenuItem>
+            </Select>
+          </FormControl>
+        </Box>
 
-        {/* Pipeline Status Tabs */}
-        <div
-          style={{
+        {/* Status Pipeline Chips */}
+        <Box
+          sx={{
             display: 'flex',
-            gap: '0.5rem',
+            gap: 1,
             overflowX: 'auto',
-            paddingTop: '0.85rem',
-            marginTop: '0.85rem',
-            borderTop: '1px solid var(--border-subtle)',
+            pt: 2,
+            mt: 2,
+            borderTop: '1px solid #F1F5F9',
           }}
         >
-          {statusTabs.map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setStatusFilter(tab.id)}
-              className="btn btn-sm"
-              style={{
-                backgroundColor: statusFilter === tab.id ? 'var(--accent-primary)' : 'transparent',
-                color: statusFilter === tab.id ? '#ffffff' : 'var(--text-secondary)',
-                border: statusFilter === tab.id ? '1px solid var(--accent-primary)' : '1px solid var(--border-subtle)',
-                fontWeight: 600,
-              }}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </div>
-      </div>
+          {statusTabs.map((tab) => {
+            const isSelected = statusFilter === tab.id;
+            return (
+              <Chip
+                key={tab.id}
+                label={tab.label}
+                clickable
+                onClick={() => setStatusFilter(tab.id)}
+                color={isSelected ? 'primary' : 'default'}
+                variant={isSelected ? 'filled' : 'outlined'}
+                sx={{
+                  fontWeight: isSelected ? 700 : 500,
+                  fontSize: '0.78rem',
+                  borderRadius: 2,
+                }}
+              />
+            );
+          })}
+        </Box>
+      </Paper>
 
       {/* Orders Table */}
-      <div className="glass-panel" style={{ overflow: 'hidden' }}>
-        <div className="table-container">
-          <table className="data-table">
-            <thead>
-              <tr>
-                <th>Job ID & Center</th>
-                <th>Customer & Address</th>
-                <th>Phone</th>
-                <th>Type</th>
-                <th>Device / Product</th>
-                <th style={{ minWidth: '220px' }}>Details</th>
-                <th>Status</th>
-                <th>Cost & Due</th>
-                <th style={{ textAlign: 'center' }}>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
+      <Paper sx={{ borderRadius: 3, overflow: 'hidden' }}>
+        <TableContainer>
+          <Table size="medium">
+            <TableHead>
+              <TableRow>
+                <TableCell>Job ID & Center</TableCell>
+                <TableCell>Customer Details</TableCell>
+                <TableCell>Phone</TableCell>
+                <TableCell>Type</TableCell>
+                <TableCell>Device / Item</TableCell>
+                <TableCell sx={{ minWidth: 220 }}>Fault / Description</TableCell>
+                <TableCell>Status</TableCell>
+                <TableCell>Amount & Dues</TableCell>
+                <TableCell align="center">Actions</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
               {loading ? (
-                <tr>
-                  <td colSpan={9} style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>
-                    Loading customer orders...
-                  </td>
-                </tr>
+                <TableRow>
+                  <TableCell colSpan={9} align="center" sx={{ py: 6 }}>
+                    <CircularProgress size={32} />
+                    <Typography variant="body2" sx={{ color: 'text.secondary', mt: 1.5 }}>
+                      Loading customer orders...
+                    </Typography>
+                  </TableCell>
+                </TableRow>
               ) : orders.length === 0 ? (
-                <tr>
-                  <td colSpan={9} style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>
-                    No orders match your filters.
-                  </td>
-                </tr>
+                <TableRow>
+                  <TableCell colSpan={9} align="center" sx={{ py: 6, color: 'text.secondary' }}>
+                    No orders match your filter criteria.
+                  </TableCell>
+                </TableRow>
               ) : (
-                orders.map((ord) => {
+                orders
+                  .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+                  .map((ord) => {
                   const shopName = typeof ord.shopId === 'object' ? ord.shopId?.name : 'Center';
                   const shopCity = typeof ord.shopId === 'object' ? ord.shopId?.address?.city : '';
                   const customerAddress =
@@ -224,194 +240,258 @@ export const OrdersPage: React.FC = () => {
                   const isAccessory = (ord.orderType || 'repair') === 'accessory';
 
                   return (
-                    <tr key={ord._id}>
-                      {/* 1. Job ID & Center */}
-                      <td>
-                        <div style={{ fontFamily: 'var(--font-display)', fontWeight: 800, color: 'var(--text-primary)' }}>
+                    <TableRow key={ord._id} hover>
+                      {/* Job ID & Center */}
+                      <TableCell>
+                        <Typography
+                          variant="body2"
+                          sx={{
+                            fontWeight: 800,
+                            fontFamily: 'monospace',
+                            color: '#0F172A',
+                            fontSize: '0.85rem',
+                          }}
+                        >
                           {ord.jobId}
-                        </div>
-                        <div style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--accent-primary)' }}>
-                          🏪 {shopName} {shopCity ? `(${shopCity})` : ''}
-                        </div>
-                      </td>
+                        </Typography>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mt: 0.25 }}>
+                          <StoreRoundedIcon sx={{ fontSize: 13, color: 'primary.main' }} />
+                          <Typography variant="caption" sx={{ fontWeight: 600, color: 'primary.main' }}>
+                            {shopName} {shopCity ? `(${shopCity})` : ''}
+                          </Typography>
+                        </Box>
+                      </TableCell>
 
-                      {/* 2. Customer Name & Address */}
-                      <td>
-                        <div style={{ fontWeight: 700, color: 'var(--text-primary)' }}>
-                          {ord.customerSnapshot.name}
-                        </div>
-                        <div
-                          style={{
-                            fontSize: '0.72rem',
-                            color: 'var(--text-muted)',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '0.2rem',
-                            marginTop: '0.15rem',
+                      {/* Customer Details */}
+                      <TableCell>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25 }}>
+                          <Avatar
+                            sx={{
+                              width: 32,
+                              height: 32,
+                              fontSize: '0.75rem',
+                              fontWeight: 700,
+                              bgcolor: 'rgba(0, 82, 255, 0.1)',
+                              color: 'primary.main',
+                            }}
+                          >
+                            {ord.customerSnapshot?.name ? ord.customerSnapshot.name.charAt(0) : 'C'}
+                          </Avatar>
+                          <Box>
+                            <Typography variant="body2" sx={{ fontWeight: 700, color: '#0F172A' }}>
+                              {ord.customerSnapshot?.name}
+                            </Typography>
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.25, mt: 0.25 }}>
+                              <LocationOnRoundedIcon sx={{ fontSize: 12, color: 'text.secondary' }} />
+                              <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                                {customerAddress}
+                              </Typography>
+                            </Box>
+                          </Box>
+                        </Box>
+                      </TableCell>
+
+                      {/* Phone */}
+                      <TableCell>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                          <PhoneRoundedIcon sx={{ fontSize: 14, color: 'secondary.main' }} />
+                          <Typography variant="body2" sx={{ fontWeight: 600, color: 'secondary.dark', fontSize: '0.82rem' }}>
+                            {ord.customerSnapshot?.phone}
+                          </Typography>
+                        </Box>
+                      </TableCell>
+
+                      {/* Type */}
+                      <TableCell>
+                        <Chip
+                          icon={
+                            isAccessory ? (
+                              <ShoppingBagRoundedIcon sx={{ fontSize: '13px !important' }} />
+                            ) : (
+                              <BuildRoundedIcon sx={{ fontSize: '13px !important' }} />
+                            )
+                          }
+                          label={isAccessory ? 'Accessory' : 'Repair'}
+                          size="small"
+                          sx={{
+                            fontWeight: 700,
+                            fontSize: '0.6875rem',
+                            borderRadius: 1.5,
+                            bgcolor: isAccessory ? 'rgba(168, 85, 247, 0.1)' : 'rgba(0, 82, 255, 0.1)',
+                            color: isAccessory ? '#9333EA' : '#0052FF',
+                            border: `1px solid ${isAccessory ? 'rgba(168, 85, 247, 0.3)' : 'rgba(0, 82, 255, 0.3)'}`,
                           }}
-                        >
-                          <MapPin size={11} />
-                          <span>{customerAddress}</span>
-                        </div>
-                      </td>
+                        />
+                      </TableCell>
 
-                      {/* 3. Customer Phone */}
-                      <td>
-                        <div
-                          style={{
-                            fontSize: '0.8125rem',
-                            fontWeight: 600,
-                            color: 'var(--accent-cyan)',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '0.25rem',
-                          }}
-                        >
-                          <Phone size={12} />
-                          <span>{ord.customerSnapshot.phone}</span>
-                        </div>
-                      </td>
-
-                      {/* 4. Order Type Badge */}
-                      <td>
-                        {getOrderTypeBadge(ord.orderType)}
-                      </td>
-
-                      {/* 5. Device / Product Info */}
-                      <td>
+                      {/* Device / Item */}
+                      <TableCell>
                         {isAccessory ? (
                           <>
-                            <div style={{ fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
-                              <ShoppingBag size={13} color="var(--accent-primary)" />
-                              {ord.productName || 'Accessory'}
-                            </div>
-                            <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
-                              Price: ₹{(ord.productPrice || 0).toLocaleString('en-IN')}
-                            </div>
+                            <Typography variant="body2" sx={{ fontWeight: 700, color: '#0F172A' }}>
+                              {ord.productName || 'Accessory Product'}
+                            </Typography>
+                            <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                              MRP: ₹{(ord.productPrice || 0).toLocaleString()}
+                            </Typography>
                           </>
                         ) : (
                           <>
-                            <div style={{ fontWeight: 700 }}>
+                            <Typography variant="body2" sx={{ fontWeight: 700, color: '#0F172A' }}>
                               {ord.brand} {ord.model}
-                            </div>
-                            <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', textTransform: 'capitalize' }}>
+                            </Typography>
+                            <Typography variant="caption" sx={{ color: 'text.secondary', textTransform: 'capitalize' }}>
                               {ord.deviceType} {ord.serialOrImei ? `• IMEI: ${ord.serialOrImei.slice(-4)}` : ''}
-                            </div>
+                            </Typography>
                           </>
                         )}
-                      </td>
+                      </TableCell>
 
-                      {/* 6. Details — Issue for repair, sale info for accessory */}
-                      <td>
+                      {/* Fault Description */}
+                      <TableCell sx={{ maxWidth: 260 }}>
                         {isAccessory ? (
-                          <div style={{
-                            fontSize: '0.8125rem',
-                            color: 'var(--text-secondary)',
-                            fontStyle: 'italic',
-                          }}>
-                            Accessory sale — no repair needed
-                          </div>
+                          <Typography variant="caption" sx={{ color: 'text.secondary', fontStyle: 'italic' }}>
+                            Direct store sale
+                          </Typography>
                         ) : (
-                          <div className="issue-callout" title={ord.problemDescription}>
-                            <div
-                              style={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '0.25rem',
-                                marginBottom: '0.2rem',
-                                color: 'var(--accent-amber)',
-                                fontWeight: 700,
-                                fontSize: '0.6875rem',
+                          <Box
+                            sx={{
+                              p: 1,
+                              borderRadius: 1.5,
+                              bgcolor: 'rgba(245, 158, 11, 0.08)',
+                              border: '1px solid rgba(245, 158, 11, 0.25)',
+                              fontSize: '0.78rem',
+                              color: '#92400E',
+                              fontWeight: 500,
+                              lineHeight: 1.3,
+                            }}
+                          >
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 0.25, fontWeight: 700 }}>
+                              <WarningAmberRoundedIcon sx={{ fontSize: 13, color: '#D97706' }} />
+                              <span>FAULT:</span>
+                            </Box>
+                            "{ord.problemDescription}"
+                          </Box>
+                        )}
+                      </TableCell>
+
+                      {/* Status */}
+                      <TableCell>
+                        <StatusBadge status={ord.status} />
+                      </TableCell>
+
+                      {/* Cost & Due */}
+                      <TableCell>
+                        <Typography variant="body2" sx={{ fontWeight: 800, color: '#0F172A' }}>
+                          ₹{(ord.cost?.final || ord.cost?.estimated || 0).toLocaleString()}
+                        </Typography>
+                        {(ord.cost?.due || 0) > 0 ? (
+                          <Typography variant="caption" sx={{ fontWeight: 700, color: 'error.main', display: 'block' }}>
+                            Due: ₹{ord.cost.due.toLocaleString()}
+                          </Typography>
+                        ) : (
+                          <Typography variant="caption" sx={{ fontWeight: 700, color: 'success.main', display: 'block' }}>
+                            Paid
+                          </Typography>
+                        )}
+                      </TableCell>
+
+                      {/* Actions */}
+                      <TableCell align="center">
+                        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.5 }}>
+                          <Tooltip title="Inspect Job Card">
+                            <IconButton
+                              size="small"
+                              onClick={() => setInspectOrder(ord)}
+                              sx={{
+                                color: 'primary.main',
+                                bgcolor: 'rgba(0, 82, 255, 0.06)',
+                                '&:hover': { bgcolor: 'rgba(0, 82, 255, 0.15)' },
                               }}
                             >
-                              <AlertTriangle size={11} />
-                              <span>CUSTOMER ISSUE:</span>
-                            </div>
-                            "{ord.problemDescription}"
-                          </div>
-                        )}
-                      </td>
+                              <VisibilityRoundedIcon fontSize="small" />
+                            </IconButton>
+                          </Tooltip>
 
-                      {/* 7. Status */}
-                      <td>
-                        <StatusBadge status={ord.status} />
-                      </td>
+                          <Tooltip title="Edit Order Details">
+                            <IconButton
+                              size="small"
+                              onClick={() => setEditOrder(ord)}
+                              sx={{
+                                color: 'info.main',
+                                bgcolor: 'rgba(99, 102, 241, 0.06)',
+                                '&:hover': { bgcolor: 'rgba(99, 102, 241, 0.15)' },
+                              }}
+                            >
+                              <EditRoundedIcon fontSize="small" />
+                            </IconButton>
+                          </Tooltip>
 
-                      {/* 8. Cost & Due */}
-                      <td>
-                        <div style={{ fontWeight: 700, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
-                          <IndianRupee size={12} />
-                          <span>{(ord.cost?.final || ord.cost?.estimated || 0).toLocaleString('en-IN')}</span>
-                        </div>
-                        {(ord.cost?.due || 0) > 0 ? (
-                          <div style={{ fontSize: '0.72rem', color: '#e11d48', fontWeight: 600 }}>
-                            Due: ₹{ord.cost.due.toLocaleString('en-IN')}
-                          </div>
-                        ) : (
-                          <div style={{ fontSize: '0.72rem', color: '#16a34a', fontWeight: 600 }}>
-                            Paid in Full
-                          </div>
-                        )}
-                      </td>
-
-                      {/* 9. Action Buttons: View Order, Edit Order, Delete Order */}
-                      <td>
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.35rem' }}>
-                          {/* 1. View Order */}
-                          <button
-                            onClick={() => setInspectOrder(ord)}
-                            className="btn btn-secondary btn-sm"
-                            title="View Order Details, Status, and Payments"
-                          >
-                            <Eye size={13} />
-                            <span>View</span>
-                          </button>
-
-                          {/* 2. Edit Order */}
-                          <button
-                            onClick={() => setEditOrder(ord)}
-                            className="btn btn-secondary btn-sm"
-                            title="Edit Order Specs, Customer Issue, Cost"
-                          >
-                            <Edit2 size={13} />
-                            <span>Edit</span>
-                          </button>
-
-                          {/* 3. Delete Order */}
-                          <button
-                            onClick={() => handleDeleteOrder(ord)}
-                            className="btn btn-danger btn-sm"
-                            title="Delete Order"
-                          >
-                            <Trash2 size={13} />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
+                          <Tooltip title="Delete Order">
+                            <IconButton
+                              size="small"
+                              onClick={() => handleDeleteOrder(ord)}
+                              sx={{
+                                color: 'error.main',
+                                bgcolor: 'rgba(239, 68, 68, 0.06)',
+                                '&:hover': { bgcolor: 'rgba(239, 68, 68, 0.15)' },
+                              }}
+                            >
+                              <DeleteOutlineRoundedIcon fontSize="small" />
+                            </IconButton>
+                          </Tooltip>
+                        </Box>
+                      </TableCell>
+                    </TableRow>
                   );
                 })
               )}
-            </tbody>
-          </table>
-        </div>
-      </div>
+            </TableBody>
+          </Table>
+        </TableContainer>
 
-      {/* View Order Inspector Modal */}
+        {orders.length > 0 && (
+          <TablePagination
+            rowsPerPageOptions={[5, 10, 25]}
+            component="div"
+            count={orders.length}
+            rowsPerPage={rowsPerPage}
+            page={page}
+            onPageChange={(_event, newPage) => setPage(newPage)}
+            onRowsPerPageChange={(event) => {
+              setRowsPerPage(parseInt(event.target.value, 10));
+              setPage(0);
+            }}
+            sx={{ borderTop: '1px solid #E2E8F0' }}
+          />
+        )}
+      </Paper>
+
+      {/* Inspector Modal */}
       {inspectOrder && (
         <OrderInspectorModal
           order={inspectOrder}
           onClose={() => setInspectOrder(null)}
-          onOrderUpdated={() => fetchOrders()}
+          onOrderUpdated={(updated) => {
+            setInspectOrder(updated);
+            fetchOrders();
+          }}
         />
       )}
 
-      {/* Edit Order Modal */}
-      <EditOrderModal
-        order={editOrder}
-        isOpen={Boolean(editOrder)}
-        onClose={() => setEditOrder(null)}
-        onSaved={() => fetchOrders()}
-      />
-    </div>
+      {/* Edit Modal */}
+      {editOrder && (
+        <EditOrderModal
+          order={editOrder}
+          isOpen={true}
+          onClose={() => setEditOrder(null)}
+          onSaved={() => {
+            setEditOrder(null);
+            fetchOrders();
+          }}
+        />
+      )}
+    </Box>
   );
 };
+export default OrdersPage;

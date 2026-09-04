@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Box } from '@mui/material';
 import { AdminAuthProvider, useAdminAuth } from './context/AdminAuthContext';
 import { Sidebar, type NavTab } from './components/Sidebar';
 import { Topbar } from './components/Topbar';
@@ -15,7 +16,7 @@ import { TechnicianModal } from './components/TechnicianModal';
 const AdminPortalContent: React.FC = () => {
   const { isAuthenticated, refreshShops } = useAdminAuth();
   const [activeTab, setActiveTab] = useState<NavTab>('dashboard');
-  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [drawerOpen, setDrawerOpen] = useState(true);
 
   // Global modals
   const [isShopModalOpen, setIsShopModalOpen] = useState(false);
@@ -25,70 +26,36 @@ const AdminPortalContent: React.FC = () => {
     return <LoginPage />;
   }
 
-  const handleGlobalRefresh = async () => {
-    setIsRefreshing(true);
-    await refreshShops();
-    setTimeout(() => {
-      setIsRefreshing(false);
-    }, 600);
-  };
-
-  const getPageTitle = () => {
-    switch (activeTab) {
-      case 'dashboard':
-        return {
-          title: 'Overview / Dashboard',
-          subtitle: 'Platform-wide metrics, registered centers, technicians count, and live customer issues',
-        };
-      case 'shops':
-        return {
-          title: 'Shops / Centers',
-          subtitle: 'Registered repair centers registry with view details, center edit, delete, and technician assignment',
-        };
-      case 'orders':
-        return {
-          title: 'Customer Repair Orders',
-          subtitle: 'Comprehensive orders directory with reported customer issues, device model numbers, costs, and actions',
-        };
-      case 'accessories':
-        return {
-          title: 'Accessory Sales & Products',
-          subtitle: 'Track direct accessory sales, products sold, revenue collections, and customer records across centers',
-        };
-      case 'revenue':
-        return {
-          title: 'Revenue & Finances',
-          subtitle: 'Platform-wide cash collections, pending dues, and per-shop financial analytics',
-        };
-      case 'notifications':
-        return {
-          title: 'Notification Center',
-          subtitle: 'Broadcast announcements to all shop owners or dispatch private notifications to a specific center',
-        };
-      default:
-        return { title: 'Admin Dashboard', subtitle: 'DataDaddy Control Center' };
-    }
-  };
-
-  const pageInfo = getPageTitle();
-
   return (
-    <div className="app-container">
-      {/* Light-Dark Sidebar */}
-      <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
+    <Box sx={{ display: 'flex', minHeight: '100vh', bgcolor: 'background.default' }}>
+      {/* Mini Variant Drawer Sidebar */}
+      <Sidebar
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
+        open={drawerOpen}
+        onToggle={() => setDrawerOpen((prev) => !prev)}
+      />
 
-      {/* Main Content Area */}
-      <div className="main-content">
-        {/* Crisp White Topbar */}
+      {/* Main Column */}
+      <Box sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+        {/* Crisp Clean Topbar */}
         <Topbar
-          title={pageInfo.title}
-          subtitle={pageInfo.subtitle}
-          onRefresh={handleGlobalRefresh}
-          isRefreshing={isRefreshing}
+          onToggleSidebar={() => setDrawerOpen((prev) => !prev)}
+          isSidebarOpen={drawerOpen}
         />
 
-        {/* 6 Core Tab Pages */}
-        <main style={{ flex: 1, paddingBottom: '3rem' }}>
+        {/* Generous Content Gap & Padding */}
+        <Box
+          component="main"
+          sx={{
+            flexGrow: 1,
+            p: { xs: 2.5, sm: 3.5, md: 4.5 },
+            maxWidth: 1600,
+            width: '100%',
+            mx: 'auto',
+            pb: 8,
+          }}
+        >
           {activeTab === 'dashboard' && (
             <DashboardPage
               onNavigateTab={setActiveTab}
@@ -106,8 +73,8 @@ const AdminPortalContent: React.FC = () => {
           {activeTab === 'revenue' && <RevenuePage />}
 
           {activeTab === 'notifications' && <NotificationPage />}
-        </main>
-      </div>
+        </Box>
+      </Box>
 
       {/* Quick Action Modals */}
       <ShopModal
@@ -123,7 +90,7 @@ const AdminPortalContent: React.FC = () => {
         onClose={() => setIsTechModalOpen(false)}
         onSaved={() => refreshShops()}
       />
-    </div>
+    </Box>
   );
 };
 

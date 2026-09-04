@@ -226,7 +226,7 @@ export const OrderInspectorModal: React.FC<OrderInspectorModalProps> = ({
                   fontFamily: 'var(--font-display)',
                   fontWeight: 700,
                   fontSize: '0.875rem',
-                  color: '#fef3c7',
+                  color: '#B45309',
                   textTransform: 'uppercase',
                   letterSpacing: '0.04em',
                 }}>
@@ -235,7 +235,7 @@ export const OrderInspectorModal: React.FC<OrderInspectorModalProps> = ({
               </div>
               <p style={{
                 fontSize: '0.9375rem',
-                color: '#fffbeb',
+                color: '#1E293B',
                 lineHeight: 1.5,
                 fontWeight: 500,
               }}>
@@ -259,7 +259,7 @@ export const OrderInspectorModal: React.FC<OrderInspectorModalProps> = ({
                   fontFamily: 'var(--font-display)',
                   fontWeight: 700,
                   fontSize: '0.875rem',
-                  color: '#e9d5ff',
+                  color: '#7E22CE',
                   textTransform: 'uppercase',
                   letterSpacing: '0.04em',
                 }}>
@@ -268,7 +268,7 @@ export const OrderInspectorModal: React.FC<OrderInspectorModalProps> = ({
               </div>
               <p style={{
                 fontSize: '1.125rem',
-                color: '#f3e8ff',
+                color: '#0F172A',
                 lineHeight: 1.5,
                 fontWeight: 700,
               }}>
@@ -276,7 +276,7 @@ export const OrderInspectorModal: React.FC<OrderInspectorModalProps> = ({
               </p>
               <p style={{
                 fontSize: '0.875rem',
-                color: '#d8b4fe',
+                color: '#6B21A8',
                 fontWeight: 600,
                 marginTop: '0.25rem',
               }}>
@@ -553,19 +553,19 @@ export const OrderInspectorModal: React.FC<OrderInspectorModalProps> = ({
                 <div style={{ fontSize: '0.6875rem', color: 'var(--text-muted)' }}>FINAL BILL</div>
                 <div style={{ fontSize: '1.1rem', fontWeight: 700 }}>₹{currentOrder.cost.final}</div>
               </div>
-              <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '0.75rem', borderRadius: 'var(--radius-md)', border: '1px solid rgba(16, 185, 129, 0.2)' }}>
-                <div style={{ fontSize: '0.6875rem', color: '#6ee7b7' }}>COLLECTED</div>
-                <div style={{ fontSize: '1.1rem', fontWeight: 800, color: '#34d399' }}>₹{currentOrder.cost.advancePaid}</div>
+              <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '0.75rem', borderRadius: 'var(--radius-md)', border: '1px solid rgba(16, 185, 129, 0.25)' }}>
+                <div style={{ fontSize: '0.6875rem', color: '#047857', fontWeight: 700 }}>COLLECTED</div>
+                <div style={{ fontSize: '1.1rem', fontWeight: 800, color: '#059669' }}>₹{currentOrder.cost.advancePaid}</div>
               </div>
-              <div style={{ background: currentOrder.cost.due > 0 ? 'rgba(244, 63, 94, 0.1)' : 'rgba(255, 255, 255, 0.03)', padding: '0.75rem', borderRadius: 'var(--radius-md)', border: currentOrder.cost.due > 0 ? '1px solid rgba(244, 63, 94, 0.2)' : 'none' }}>
-                <div style={{ fontSize: '0.6875rem', color: currentOrder.cost.due > 0 ? '#fda4af' : 'var(--text-muted)' }}>PENDING DUE</div>
-                <div style={{ fontSize: '1.1rem', fontWeight: 800, color: currentOrder.cost.due > 0 ? '#f43f5e' : 'var(--text-muted)' }}>₹{currentOrder.cost.due}</div>
+              <div style={{ background: currentOrder.cost.due > 0 ? 'rgba(244, 63, 94, 0.1)' : 'rgba(255, 255, 255, 0.03)', padding: '0.75rem', borderRadius: 'var(--radius-md)', border: currentOrder.cost.due > 0 ? '1px solid rgba(244, 63, 94, 0.25)' : 'none' }}>
+                <div style={{ fontSize: '0.6875rem', color: currentOrder.cost.due > 0 ? '#BE123C' : 'var(--text-muted)', fontWeight: 700 }}>PENDING DUE</div>
+                <div style={{ fontSize: '1.1rem', fontWeight: 800, color: currentOrder.cost.due > 0 ? '#DC2626' : 'var(--text-muted)' }}>₹{currentOrder.cost.due}</div>
               </div>
             </div>
 
             {/* Quick Payment Drawer */}
             {showPaymentForm && (
-              <form onSubmit={handleRecordPayment} style={{ marginTop: '1rem', padding: '1rem', background: 'rgba(15, 23, 42, 0.6)', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-subtle)' }}>
+              <form onSubmit={handleRecordPayment} style={{ marginTop: '1rem', padding: '1rem', background: '#F8FAFC', borderRadius: 'var(--radius-md)', border: '1px solid #CBD5E1' }}>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr auto', gap: '0.75rem', alignItems: 'flex-end' }}>
                   <div className="input-group" style={{ marginBottom: 0 }}>
                     <label className="input-label">Amount (₹)</label>

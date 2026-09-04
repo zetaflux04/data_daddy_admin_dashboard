@@ -1,13 +1,29 @@
 import React, { useState, useEffect } from 'react';
 import {
-  Store,
-  Users2,
-  ClipboardList,
-  IndianRupee,
-  ArrowUpRight,
-  Eye,
-  Plus,
-} from 'lucide-react';
+  Box,
+  Typography,
+  Button,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
+  Avatar,
+  Tooltip,
+  CircularProgress,
+  TablePagination,
+} from '@mui/material';
+import StoreRoundedIcon from '@mui/icons-material/StoreRounded';
+import PeopleAltRoundedIcon from '@mui/icons-material/PeopleAltRounded';
+import ReceiptLongRoundedIcon from '@mui/icons-material/ReceiptLongRounded';
+import CurrencyRupeeRoundedIcon from '@mui/icons-material/CurrencyRupeeRounded';
+import VisibilityRoundedIcon from '@mui/icons-material/VisibilityRounded';
+import AddBusinessRoundedIcon from '@mui/icons-material/AddBusinessRounded';
+import PersonAddRoundedIcon from '@mui/icons-material/PersonAddRounded';
+import ArrowForwardRoundedIcon from '@mui/icons-material/ArrowForwardRounded';
+
 import type { PlatformOverview, OrderItem, RevenueAnalytics } from '../types/admin';
 import { StatCard } from '../components/StatCard';
 import { StatusBadge } from '../components/StatusBadge';
@@ -32,6 +48,8 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
   const [revenueData, setRevenueData] = useState<RevenueAnalytics | null>(null);
   const [selectedOrder, setSelectedOrder] = useState<OrderItem | null>(null);
   const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
 
   const loadData = async () => {
     setLoading(true);
@@ -55,49 +73,75 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
   const kpis = overview?.kpis;
 
   return (
-    <div className="page-wrapper" style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-      
+    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3.5 }}>
       {/* Header Banner */}
-      <div style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        flexWrap: 'wrap',
-        gap: '1rem',
-      }}>
-        <div>
-          <h2 style={{ fontSize: '1.6rem', fontWeight: 800 }}>
+      <Box
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          flexWrap: 'wrap',
+          gap: 2,
+        }}
+      >
+        <Box>
+          <Typography variant="h5" sx={{ fontWeight: 800, color: '#0F172A', letterSpacing: '-0.02em' }}>
             {selectedShopId === 'all'
-              ? 'Platform Overview'
+              ? 'Platform Overview & Health'
               : `${activeShop?.name || 'Shop'} Dashboard`}
-          </h2>
-          <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)' }}>
+          </Typography>
+          <Typography variant="body2" sx={{ color: 'text.secondary', mt: 0.5 }}>
             {selectedShopId === 'all'
-              ? 'Real-time multi-shop aggregation, job status pipeline, and revenue metrics.'
+              ? 'Real-time multi-shop aggregation, job pipeline status, and consolidated revenue intelligence.'
               : `Operating in ${activeShop?.address?.city || 'India'} • Managed by ${activeShop?.ownerName}`}
-          </p>
-        </div>
+          </Typography>
+        </Box>
 
-        <div style={{ display: 'flex', gap: '0.75rem' }}>
-          <button onClick={onOpenTechModal} className="btn btn-secondary btn-sm">
-            <Users2 size={15} />
-            <span>+ Add Technician</span>
-          </button>
-          <button onClick={onOpenShopModal} className="btn btn-primary btn-sm">
-            <Plus size={15} />
-            <span>+ Onboard Shop</span>
-          </button>
-        </div>
-      </div>
+        <Box sx={{ display: 'flex', gap: 1.5 }}>
+          <Button
+            variant="outlined"
+            size="small"
+            onClick={onOpenTechModal}
+            startIcon={<PersonAddRoundedIcon fontSize="small" />}
+            sx={{
+              color: '#334155',
+              borderColor: '#CBD5E1',
+              '&:hover': { borderColor: '#0052FF', color: '#0052FF' },
+            }}
+          >
+            Add Technician
+          </Button>
+
+          <Button
+            variant="contained"
+            color="primary"
+            size="small"
+            onClick={onOpenShopModal}
+            startIcon={<AddBusinessRoundedIcon fontSize="small" />}
+          >
+            Onboard Shop
+          </Button>
+        </Box>
+      </Box>
 
       {/* KPI Stat Cards Grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(230px, 1fr))', gap: '1.25rem' }}>
+      <Box
+        sx={{
+          display: 'grid',
+          gridTemplateColumns: {
+            xs: '1fr',
+            sm: 'repeat(2, 1fr)',
+            lg: 'repeat(4, 1fr)',
+          },
+          gap: 2.5,
+        }}
+      >
         <StatCard
           title="TOTAL REVENUE"
           value={`₹${(kpis?.totalRevenue || 0).toLocaleString()}`}
-          subtitle={`${selectedShopId === 'all' ? 'All Shops Collected' : 'Total Collected'}`}
+          subtitle={selectedShopId === 'all' ? 'All Shops Collected' : 'Total Collected'}
           trend={{ value: '+14% this month', isPositive: true }}
-          icon={IndianRupee}
+          icon={CurrencyRupeeRoundedIcon}
           gradient="emerald"
         />
 
@@ -105,17 +149,17 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
           title="ACTIVE SHOPS"
           value={kpis?.totalShops || 0}
           subtitle={`${kpis?.proShops || 0} on Pro Tier`}
-          trend={{ value: `${kpis?.activeShops || 0} active`, isPositive: true }}
-          icon={Store}
+          trend={{ value: `${kpis?.activeShops || 0} active centers`, isPositive: true }}
+          icon={StoreRoundedIcon}
           gradient="brand"
         />
 
         <StatCard
           title="TOTAL TECHNICIANS"
           value={kpis?.totalTechnicians || 0}
-          subtitle="Hardware & Board Engineers"
+          subtitle="Hardware & Chip Engineers"
           trend={{ value: 'Multi-shop staff', isPositive: true }}
-          icon={Users2}
+          icon={PeopleAltRoundedIcon}
           gradient="cyan"
         />
 
@@ -124,120 +168,234 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
           value={(overview?.statusCounts?.pending || 0) + (overview?.statusCounts?.in_progress || 0)}
           subtitle={`₹${(kpis?.totalDues || 0).toLocaleString()} uncollected dues`}
           trend={{ value: `${overview?.statusCounts?.in_progress || 0} in progress`, isPositive: true }}
-          icon={ClipboardList}
+          icon={ReceiptLongRoundedIcon}
           gradient="amber"
         />
-      </div>
+      </Box>
 
       {/* Revenue Charts & Leaderboard */}
       <RevenueChart data={revenueData} />
 
       {/* Live Recent Orders & Customer Issues Feed */}
-      <div className="glass-panel" style={{ padding: '1.5rem' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.25rem' }}>
-          <div>
-            <h3 style={{ fontSize: '1.1rem', fontWeight: 700 }}>Live Orders & Customer Issues Feed</h3>
-            <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-              Inspect customer-reported problems and device status across repair shops
-            </p>
-          </div>
-          <button
-            onClick={() => onNavigateTab('orders')}
-            className="btn btn-ghost btn-sm"
-            style={{ color: 'var(--accent-primary)' }}
-          >
-            <span>View All Orders</span>
-            <ArrowUpRight size={15} />
-          </button>
-        </div>
+      <Paper sx={{ p: { xs: 2, sm: 3 }, borderRadius: 3, overflow: 'hidden' }}>
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            mb: 2.5,
+            flexWrap: 'wrap',
+            gap: 1.5,
+          }}
+        >
+          <Box>
+            <Typography variant="h6" sx={{ fontWeight: 800, color: '#0F172A', fontSize: '1.05rem' }}>
+              Live Repair Orders & Customer Issues Feed
+            </Typography>
+            <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block' }}>
+              Real-time feed of reported device faults and repair stages across centers
+            </Typography>
+          </Box>
 
-        <div className="table-container">
-          <table className="data-table">
-            <thead>
-              <tr>
-                <th>Job ID</th>
-                <th>Shop</th>
-                <th>Customer Details</th>
-                <th>Device</th>
-                <th>Customer Issue / Fault</th>
-                <th>Status</th>
-                <th>Amount / Due</th>
-                <th>Action</th>
-              </tr>
-            </thead>
-            <tbody>
+          <Button
+            variant="text"
+            size="small"
+            onClick={() => onNavigateTab('orders')}
+            endIcon={<ArrowForwardRoundedIcon fontSize="small" />}
+            sx={{ fontWeight: 700, color: 'primary.main' }}
+          >
+            View All Orders
+          </Button>
+        </Box>
+
+        <TableContainer sx={{ border: '1px solid #E2E8F0', borderRadius: 2 }}>
+          <Table size="medium">
+            <TableHead>
+              <TableRow>
+                <TableCell>Job ID</TableCell>
+                <TableCell>Repair Center</TableCell>
+                <TableCell>Customer Details</TableCell>
+                <TableCell>Device Model</TableCell>
+                <TableCell>Customer Issue / Fault</TableCell>
+                <TableCell>Job Status</TableCell>
+                <TableCell>Amount & Dues</TableCell>
+                <TableCell align="center">Action</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
               {loading ? (
-                <tr>
-                  <td colSpan={8} style={{ textAlign: 'center', padding: '2rem' }}>
-                    Loading overview...
-                  </td>
-                </tr>
+                <TableRow>
+                  <TableCell colSpan={8} align="center" sx={{ py: 6 }}>
+                    <CircularProgress size={32} />
+                    <Typography variant="body2" sx={{ color: 'text.secondary', mt: 1.5 }}>
+                      Loading platform data...
+                    </Typography>
+                  </TableCell>
+                </TableRow>
               ) : overview?.recentOrders && overview.recentOrders.length > 0 ? (
-                overview.recentOrders.map((ord) => {
+                overview.recentOrders
+                  .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+                  .map((ord) => {
                   const shopName = typeof ord.shopId === 'object' ? ord.shopId?.name : 'Shop';
                   return (
-                    <tr key={ord._id}>
-                      <td>
-                        <span style={{ fontFamily: 'var(--font-display)', fontWeight: 700, color: 'var(--text-primary)' }}>
-                          {ord.jobId}
-                        </span>
-                      </td>
-                      <td>
-                        <span style={{ fontSize: '0.8125rem', color: 'var(--text-secondary)' }}>
-                          {shopName}
-                        </span>
-                      </td>
-                      <td>
-                        <div style={{ fontWeight: 600 }}>{ord.customerSnapshot.name}</div>
-                        <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                          {ord.customerSnapshot.phone}
-                        </div>
-                      </td>
-                      <td>
-                        <div style={{ fontWeight: 600 }}>{ord.brand} {ord.model}</div>
-                        <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', textTransform: 'capitalize' }}>
-                          {ord.deviceType}
-                        </div>
-                      </td>
-                      <td>
-                        {/* Prominent customer issue */}
-                        <div className="issue-callout">
-                          "{ord.problemDescription}"
-                        </div>
-                      </td>
-                      <td>
-                        <StatusBadge status={ord.status} />
-                      </td>
-                      <td>
-                        <div style={{ fontWeight: 700 }}>₹{ord.cost.final}</div>
-                        <div style={{ fontSize: '0.75rem', color: ord.cost.due > 0 ? '#f43f5e' : '#10b981' }}>
-                          {ord.cost.due > 0 ? `Due: ₹${ord.cost.due}` : 'Paid'}
-                        </div>
-                      </td>
-                      <td>
-                        <button
-                          onClick={() => setSelectedOrder(ord)}
-                          className="btn btn-secondary btn-sm"
-                          title="Open Full Job Card Inspector"
+                    <TableRow key={ord._id} hover>
+                      <TableCell>
+                        <Typography
+                          variant="body2"
+                          sx={{
+                            fontWeight: 800,
+                            fontFamily: 'monospace',
+                            color: 'primary.main',
+                            fontSize: '0.85rem',
+                          }}
                         >
-                          <Eye size={14} />
-                          <span>Inspect</span>
-                        </button>
-                      </td>
-                    </tr>
+                          {ord.jobId}
+                        </Typography>
+                      </TableCell>
+
+                      <TableCell>
+                        <Typography variant="body2" sx={{ fontWeight: 600, color: '#334155' }}>
+                          {shopName}
+                        </Typography>
+                      </TableCell>
+
+                      <TableCell>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25 }}>
+                          <Avatar
+                            sx={{
+                              width: 32,
+                              height: 32,
+                              fontSize: '0.75rem',
+                              fontWeight: 700,
+                              bgcolor: 'rgba(0, 82, 255, 0.1)',
+                              color: 'primary.main',
+                            }}
+                          >
+                            {ord.customerSnapshot?.name ? ord.customerSnapshot.name.charAt(0) : 'C'}
+                          </Avatar>
+                          <Box>
+                            <Typography variant="body2" sx={{ fontWeight: 700, color: '#0F172A' }}>
+                              {ord.customerSnapshot?.name}
+                            </Typography>
+                            <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block' }}>
+                              {ord.customerSnapshot?.phone}
+                            </Typography>
+                          </Box>
+                        </Box>
+                      </TableCell>
+
+                      <TableCell>
+                        <Typography variant="body2" sx={{ fontWeight: 700, color: '#0F172A' }}>
+                          {ord.brand} {ord.model}
+                        </Typography>
+                        <Typography
+                          variant="caption"
+                          sx={{
+                            color: 'text.secondary',
+                            textTransform: 'capitalize',
+                            display: 'block',
+                          }}
+                        >
+                          {ord.deviceType}
+                        </Typography>
+                      </TableCell>
+
+                      <TableCell sx={{ maxWidth: 260 }}>
+                        <Box
+                          sx={{
+                            p: 1,
+                            borderRadius: 1.5,
+                            bgcolor: '#F8FAFC',
+                            border: '1px solid #E2E8F0',
+                            fontSize: '0.78rem',
+                            color: '#1E293B',
+                            fontWeight: 500,
+                            lineHeight: 1.3,
+                            display: '-webkit-box',
+                            WebkitLineClamp: 2,
+                            WebkitBoxOrient: 'vertical',
+                            overflow: 'hidden',
+                          }}
+                        >
+                          "{ord.problemDescription}"
+                        </Box>
+                      </TableCell>
+
+                      <TableCell>
+                        <StatusBadge status={ord.status} />
+                      </TableCell>
+
+                      <TableCell>
+                        <Typography variant="body2" sx={{ fontWeight: 800, color: '#0F172A' }}>
+                          ₹{(ord.cost?.final || 0).toLocaleString()}
+                        </Typography>
+                        <Typography
+                          variant="caption"
+                          sx={{
+                            fontWeight: 700,
+                            color: (ord.cost?.due || 0) > 0 ? 'error.main' : 'success.main',
+                          }}
+                        >
+                          {(ord.cost?.due || 0) > 0 ? `Due: ₹${ord.cost.due}` : 'Fully Paid'}
+                        </Typography>
+                      </TableCell>
+
+                      <TableCell align="center">
+                        <Tooltip title="Inspect Full Job Card">
+                          <Button
+                            variant="outlined"
+                            size="small"
+                            onClick={() => setSelectedOrder(ord)}
+                            startIcon={<VisibilityRoundedIcon sx={{ fontSize: 16 }} />}
+                            sx={{
+                              borderRadius: 2,
+                              fontSize: '0.75rem',
+                              px: 1.5,
+                              py: 0.5,
+                              color: '#334155',
+                              borderColor: '#CBD5E1',
+                              '&:hover': {
+                                borderColor: '#0052FF',
+                                color: '#0052FF',
+                                bgcolor: 'rgba(0, 82, 255, 0.04)',
+                              },
+                            }}
+                          >
+                            Inspect
+                          </Button>
+                        </Tooltip>
+                      </TableCell>
+                    </TableRow>
                   );
                 })
               ) : (
-                <tr>
-                  <td colSpan={8} style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>
-                    No repair orders found. Click "Seed Demo Data" on top to populate realistic records!
-                  </td>
-                </tr>
+                <TableRow>
+                  <TableCell colSpan={8} align="center" sx={{ py: 6, color: 'text.secondary' }}>
+                    No repair orders recorded. Click "Seed Demo Data" above to generate realistic data!
+                  </TableCell>
+                </TableRow>
               )}
-            </tbody>
-          </table>
-        </div>
-      </div>
+            </TableBody>
+          </Table>
+        </TableContainer>
+
+        {/* 10 per page TablePagination */}
+        {overview?.recentOrders && overview.recentOrders.length > 0 && (
+          <TablePagination
+            rowsPerPageOptions={[5, 10, 25]}
+            component="div"
+            count={overview.recentOrders.length}
+            rowsPerPage={rowsPerPage}
+            page={page}
+            onPageChange={(_event, newPage) => setPage(newPage)}
+            onRowsPerPageChange={(event) => {
+              setRowsPerPage(parseInt(event.target.value, 10));
+              setPage(0);
+            }}
+            sx={{ borderTop: '1px solid #E2E8F0' }}
+          />
+        )}
+      </Paper>
 
       {/* Order Inspector Modal */}
       {selectedOrder && (
@@ -250,7 +408,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
           }}
         />
       )}
-
-    </div>
+    </Box>
   );
 };
+export default DashboardPage;

@@ -1,11 +1,30 @@
 import React, { useState, useEffect } from 'react';
-import { X, Users2, Check } from 'lucide-react';
+import {
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  TextField,
+  FormControl,
+  Select,
+  MenuItem,
+  Button,
+  IconButton,
+  Box,
+  Typography,
+  CircularProgress,
+} from '@mui/material';
+import CloseRoundedIcon from '@mui/icons-material/CloseRounded';
+import PeopleAltRoundedIcon from '@mui/icons-material/PeopleAltRounded';
+import CheckRoundedIcon from '@mui/icons-material/CheckRounded';
+
 import type { TechnicianItem, UserRole } from '../types/admin';
 import { adminApi } from '../services/adminApi';
 import { useAdminAuth } from '../context/AdminAuthContext';
 
 interface TechnicianModalProps {
   technician: TechnicianItem | null;
+  shopId?: string;
   defaultShopId?: string;
   isOpen: boolean;
   onClose: () => void;
@@ -14,13 +33,14 @@ interface TechnicianModalProps {
 
 export const TechnicianModal: React.FC<TechnicianModalProps> = ({
   technician,
+  shopId: propShopId,
   defaultShopId,
   isOpen,
   onClose,
   onSaved,
 }) => {
   const { shops, addToast } = useAdminAuth();
-  const [shopId, setShopId] = useState('');
+  const [selectedShopId, setSelectedShopId] = useState('');
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const [role, setRole] = useState<UserRole>('technician');
@@ -30,25 +50,23 @@ export const TechnicianModal: React.FC<TechnicianModalProps> = ({
   useEffect(() => {
     if (technician) {
       const sid = typeof technician.shopId === 'object' ? technician.shopId?._id : technician.shopId;
-      setShopId(sid || '');
+      setSelectedShopId(sid || '');
       setName(technician.name);
       setPhone(technician.phone);
       setRole(technician.role);
       setIsActive(technician.isActive);
     } else {
-      setShopId(defaultShopId || shops[0]?._id || '');
+      setSelectedShopId(propShopId || defaultShopId || shops[0]?._id || '');
       setName('');
       setPhone('');
       setRole('technician');
       setIsActive(true);
     }
-  }, [technician, defaultShopId, isOpen, shops]);
-
-  if (!isOpen) return null;
+  }, [technician, propShopId, defaultShopId, isOpen, shops]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name || !phone || !shopId) {
+    if (!name || !phone || !selectedShopId) {
       addToast('error', 'Shop, name, and phone number are required');
       return;
     }
@@ -66,7 +84,7 @@ export const TechnicianModal: React.FC<TechnicianModalProps> = ({
         addToast('success', `Staff member ${name} updated successfully`);
       } else {
         const created = await adminApi.createTechnician({
-          shopId,
+          shopId: selectedShopId,
           name,
           phone,
           role,
@@ -83,105 +101,100 @@ export const TechnicianModal: React.FC<TechnicianModalProps> = ({
   };
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-        <div className="modal-header">
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <Users2 size={20} color="var(--accent-primary)" />
-            <h3 style={{ fontSize: '1.15rem' }}>
-              {technician ? 'Edit Technician / Staff' : 'Add Technician to Shop'}
-            </h3>
-          </div>
-          <button onClick={onClose} className="btn btn-ghost btn-sm" style={{ padding: '0.4rem' }}>
-            <X size={18} />
-          </button>
-        </div>
+    <Dialog open={isOpen} onClose={onClose} maxWidth="sm" fullWidth>
+      <DialogTitle sx={{ m: 0, p: 2.5, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25 }}>
+          <PeopleAltRoundedIcon sx={{ color: 'primary.main', fontSize: 24 }} />
+          <Typography variant="h6" sx={{ fontWeight: 800, fontSize: '1.15rem' }}>
+            {technician ? 'Edit Technician / Staff' : 'Add Technician to Center'}
+          </Typography>
+        </Box>
+        <IconButton size="small" onClick={onClose}>
+          <CloseRoundedIcon fontSize="small" />
+        </IconButton>
+      </DialogTitle>
 
-        <form onSubmit={handleSubmit}>
-          <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-            <div className="input-group">
-              <label className="input-label">Associated Shop *</label>
-              <select
-                className="select-field"
-                value={shopId}
-                onChange={(e) => setShopId(e.target.value)}
-                disabled={!!technician}
-                required
+      <Box component="form" onSubmit={handleSubmit}>
+        <DialogContent dividers sx={{ p: 3, display: 'flex', flexDirection: 'column', gap: 2.5 }}>
+          {/* Associated Shop */}
+          <FormControl fullWidth size="small">
+            <Typography variant="caption" sx={{ fontWeight: 700, mb: 0.5 }}>Associated Repair Center *</Typography>
+            <Select
+              value={selectedShopId}
+              onChange={(e) => setSelectedShopId(e.target.value)}
+              disabled={!!technician}
+              required
+            >
+              {shops.map((s) => (
+                <MenuItem key={s._id} value={s._id}>
+                  🏪 {s.name} {s.address?.city ? `(${s.address.city})` : ''}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+
+          {/* Name & Phone */}
+          <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 2 }}>
+            <TextField
+              fullWidth
+              label="Full Name"
+              placeholder="e.g. Ramesh Deshmukh"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              required
+            />
+            <TextField
+              fullWidth
+              label="Phone Number"
+              placeholder="10-digit mobile"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              required
+            />
+          </Box>
+
+          {/* Role & Status */}
+          <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 2 }}>
+            <FormControl fullWidth size="small">
+              <Typography variant="caption" sx={{ fontWeight: 700, mb: 0.5 }}>Staff Role</Typography>
+              <Select
+                value={role}
+                onChange={(e) => setRole(e.target.value as any)}
               >
-                <option value="">Select Shop</option>
-                {shops.map((s) => (
-                  <option key={s._id} value={s._id}>
-                    {s.name} ({s.address?.city || 'India'})
-                  </option>
-                ))}
-              </select>
-            </div>
+                <MenuItem value="technician">Technician (Repairs & Hardware)</MenuItem>
+                <MenuItem value="staff">Front Desk Staff (Intake & Billing)</MenuItem>
+                <MenuItem value="owner">Shop Owner / Manager</MenuItem>
+              </Select>
+            </FormControl>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-              <div className="input-group">
-                <label className="input-label">Full Name *</label>
-                <input
-                  type="text"
-                  className="input-field"
-                  placeholder="e.g. Ramesh Deshmukh"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  required
-                />
-              </div>
+            <FormControl fullWidth size="small">
+              <Typography variant="caption" sx={{ fontWeight: 700, mb: 0.5 }}>Status</Typography>
+              <Select
+                value={isActive ? 'active' : 'inactive'}
+                onChange={(e) => setIsActive(e.target.value === 'active')}
+              >
+                <MenuItem value="active">🟢 Active (Accepts Jobs)</MenuItem>
+                <MenuItem value="inactive">⚪ Inactive / On Leave</MenuItem>
+              </Select>
+            </FormControl>
+          </Box>
+        </DialogContent>
 
-              <div className="input-group">
-                <label className="input-label">Phone Number *</label>
-                <input
-                  type="tel"
-                  className="input-field"
-                  placeholder="10-digit mobile"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  required
-                />
-              </div>
-            </div>
-
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-              <div className="input-group">
-                <label className="input-label">Role</label>
-                <select
-                  className="select-field"
-                  value={role}
-                  onChange={(e) => setRole(e.target.value as any)}
-                >
-                  <option value="technician">Technician (Repairs & Hardware)</option>
-                  <option value="staff">Front Desk Staff (Intake & Billing)</option>
-                  <option value="owner">Shop Owner / Manager</option>
-                </select>
-              </div>
-
-              <div className="input-group">
-                <label className="input-label">Account Status</label>
-                <select
-                  className="select-field"
-                  value={isActive ? 'active' : 'inactive'}
-                  onChange={(e) => setIsActive(e.target.value === 'active')}
-                >
-                  <option value="active">Active (Can accept jobs)</option>
-                  <option value="inactive">Inactive / On Leave</option>
-                </select>
-              </div>
-            </div>
-          </div>
-
-          <div className="modal-footer">
-            <button type="button" onClick={onClose} className="btn btn-ghost">
-              Cancel
-            </button>
-            <button type="submit" disabled={isSubmitting} className="btn btn-primary">
-              <Check size={16} />
-              <span>{isSubmitting ? 'Saving...' : technician ? 'Save Changes' : 'Add Technician'}</span>
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
+        <DialogActions sx={{ p: 2.5 }}>
+          <Button variant="outlined" onClick={onClose} sx={{ color: '#475569', borderColor: '#CBD5E1' }}>
+            Cancel
+          </Button>
+          <Button
+            type="submit"
+            variant="contained"
+            disabled={isSubmitting}
+            startIcon={isSubmitting ? <CircularProgress size={16} color="inherit" /> : <CheckRoundedIcon fontSize="small" />}
+          >
+            {isSubmitting ? 'Saving...' : technician ? 'Save Changes' : 'Assign Technician'}
+          </Button>
+        </DialogActions>
+      </Box>
+    </Dialog>
   );
 };
+export default TechnicianModal;
